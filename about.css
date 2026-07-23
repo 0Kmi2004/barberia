@@ -1,0 +1,22 @@
+.about-section {
+    background-color: #d7cec1;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+.about-container {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.about-container p{
+    max-width: 50%;
+    text-align: center;
+}
+h2 {
+    margin: 0;
+}
