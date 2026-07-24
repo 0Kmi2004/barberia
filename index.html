@@ -1,48 +1,525 @@
-<!doctype html>
-<html lang="en">
-
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Barbería</title>
-    <link rel="stylesheet" href="hero.css">
-    <link rel="stylesheet" href="about.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Bucle Bomba Barbería</title>
+
+  <!-- Google Fonts -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Roboto+Slab:wght@700;900&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
 </head>
 
+
 <body>
-    <div class="page">
-        <section class="hero-section">
-            <div class="navbar">
-                <div class="bar">
-                    <div class="navbar-item"><img src="assets/menub.png" width="50" class="menu-btn" alt=""> </div>
-                    <div class="navbar-item"><img src="assets/chueco-logo.jpg" width="130" class="logo" alt=""> </div>
-                    <div class="navbar-item">
-                        <div class="turno-btn">Reservá turno</div>
-                    </div>
-                </div>
-            </div>
-            <div class="hero">
-                <div class="aside1">
-                    <div class="hero-container">
-                        <img src="assets/aside12.jpg" alt="">
-                    </div>
-                </div>
-                <div class="aside2">
-                    <video autoplay muted loop playsinline>
-                        <source src="assets/barvideo.mp4" type="video/mp4">
-                    </video>
-                </div>
-            </div>
-        </section>
-        <section class="about-section">
-            <div class="about-container">
-                <h2>Sobre Nosotros</h2>
-                <p>Somos un equipo de profesionales dedicados a brindar el mejor servicio de barbería. Nuestra misión es ofrecer un experiencia excepcional a nuestros clientes, manteniendo los más altos estándares de calidad y excelencia.</p>
-                <p>Nacimos de la pasión por el buen gusto y el deseo de crear un espacio donde cada cliente se sienta bienvenido y cuidado.</p>
-            </div>
-        </section>
-        
-    </div>
+
+
+  <!-- =========================
+       NAVBAR
+  ========================== -->
+
+  <header class="navbar">
+
+
+    <!-- MENÚ -->
+
+    <button class="menu-button" aria-label="Abrir menú">
+
+      <span></span>
+      <span></span>
+      <span></span>
+
+    </button>
+
+
+    <!-- LOGO -->
+
+    <img src="assets/chueco-logo.jpg" class="logo" alt="">
+
+
+    <!-- BOTÓN RESERVA -->
+
+    <a href="#reservar" class="booking-button">
+      RESERVÁ TURNO
+    </a>
+
+
+  </header>
+
+
+  <main>
+
+
+    <!-- =========================
+         HERO
+    ========================== -->
+
+    <section class="hero">
+
+
+      <!-- PANEL ROJO -->
+
+      <div class="hero-content">
+
+
+        <div class="hero-icon">
+          ✂
+        </div>
+
+
+        <h1>
+
+          MÁS QUE UNA<br>
+
+          <span>BARBERÍA,</span><br>
+
+          <strong>UNA ACTITUD.</strong>
+
+        </h1>
+
+
+        <div class="hero-location">
+
+          Viví la experiencia en
+          <strong>Av. Caseros 2631</strong>
+
+        </div>
+
+
+        <div class="rating">
+
+
+          <p>
+            Valorado en 4.9 estrellas por Google
+          </p>
+
+
+          <div class="stars">
+
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
+
+          </div>
+
+
+        </div>
+
+
+      </div>
+
+
+      <!-- VIDEO -->
+
+      <div class="hero-video">
+
+
+        <video
+          autoplay
+          muted
+          loop
+          playsinline
+        >
+
+          <source
+            src="assets/barvideo.mp4"
+            type="video/mp4"
+          >
+
+          Tu navegador no soporta videos.
+
+        </video>
+
+
+        <div class="video-overlay"></div>
+
+
+        <div class="video-label">
+
+          <span>01</span>
+
+          <p>
+            CORTES<br>
+            CON ACTITUD
+          </p>
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+
+    <!-- =========================
+         ABOUT
+    ========================== -->
+
+    <section id="about" class="about">
+
+
+      <!-- IMAGEN -->
+
+      <div class="about-image">
+
+
+        <img
+          src="assets/barabout.jpg"
+          alt="Interior de la barbería"
+        >
+
+
+        <div class="about-stamp">
+
+          DESDE<br>
+          2024
+
+        </div>
+
+
+      </div>
+
+
+      <!-- TEXTO -->
+
+      <div class="about-content">
+
+
+        <p class="section-label">
+          NUESTRA HISTORIA
+        </p>
+
+
+        <h2>
+
+          MÁS QUE<br>
+
+          <span>UN CORTE.</span>
+
+        </h2>
+
+
+        <div class="about-line"></div>
+
+
+        <p class="about-text">
+
+          Somos una barbería nacida de la pasión por
+          el buen gusto, la música y los detalles.
+
+        </p>
+
+
+        <p class="about-text">
+
+          Un espacio para desconectar, escuchar buena
+          música, compartir una charla y salir con otra
+          actitud.
+
+        </p>
+
+
+        <blockquote>
+
+          “ACÁ NO VENÍS<br>
+          SOLO A CORTARTE<br>
+          EL PELO.”
+
+        </blockquote>
+
+
+      </div>
+
+
+    </section>
+
+
+    <!-- =========================
+         SERVICIOS
+    ========================== -->
+
+    <section id="servicios" class="services">
+
+
+      <div class="services-header">
+
+
+        <div>
+
+          <p class="section-label">
+            NUESTRO REPERTORIO
+          </p>
+
+
+          <h2>
+            CORTES &<br>
+            <span>ACTITUD.</span>
+          </h2>
+
+        </div>
+
+
+        <p class="services-description">
+
+          Elegí tu estilo.
+          Nosotros ponemos la técnica.
+
+        </p>
+
+
+      </div>
+
+
+      <!-- SERVICIOS -->
+
+      <div class="services-grid">
+
+
+        <!-- SERVICIO 1 -->
+
+        <article class="service-card">
+
+
+          <div class="service-top">
+
+            <span class="service-number">
+              01
+            </span>
+
+            <span class="service-icon">
+              ✂
+            </span>
+
+          </div>
+
+
+          <h3>
+            CORTE
+          </h3>
+
+
+          <p>
+
+            Clásico, moderno o como quieras.
+            Encontramos el estilo que va con vos.
+
+          </p>
+
+
+          <div class="service-bottom">
+
+            <span>
+              DESDE
+            </span>
+
+            <strong>
+              $8.000
+            </strong>
+
+          </div>
+
+
+        </article>
+
+
+        <!-- SERVICIO 2 -->
+
+        <article class="service-card featured">
+
+
+          <div class="service-top">
+
+            <span class="service-number">
+              02
+            </span>
+
+            <span class="service-icon">
+              ★
+            </span>
+
+          </div>
+
+
+          <h3>
+            CORTE + BARBA
+          </h3>
+
+
+          <p>
+
+            La experiencia completa.
+            Corte, perfilado y terminación.
+
+          </p>
+
+
+          <div class="service-bottom">
+
+            <span>
+              DESDE
+            </span>
+
+            <strong>
+              $12.000
+            </strong>
+
+          </div>
+
+
+        </article>
+
+
+        <!-- SERVICIO 3 -->
+
+        <article class="service-card">
+
+
+          <div class="service-top">
+
+            <span class="service-number">
+              03
+            </span>
+
+            <span class="service-icon">
+              ✦
+            </span>
+
+          </div>
+
+
+          <h3>
+            BARBA
+          </h3>
+
+
+          <p>
+
+            Perfilado, diseño y cuidado
+            para una barba impecable.
+
+          </p>
+
+
+          <div class="service-bottom">
+
+            <span>
+              DESDE
+            </span>
+
+            <strong>
+              $5.000
+            </strong>
+
+          </div>
+
+
+        </article>
+
+
+        <!-- SERVICIO 4 -->
+
+        <article class="service-card">
+
+
+          <div class="service-top">
+
+            <span class="service-number">
+              04
+            </span>
+
+            <span class="service-icon">
+              ⚡
+            </span>
+
+          </div>
+
+
+          <h3>
+            EXPERIENCIA
+          </h3>
+
+
+          <p>
+
+            Corte, barba, bebida y buena música.
+            Vení a vivir la experiencia completa.
+
+          </p>
+
+
+          <div class="service-bottom">
+
+            <span>
+              DESDE
+            </span>
+
+            <strong>
+              $15.000
+            </strong>
+
+          </div>
+
+
+        </article>
+
+
+      </div>
+
+
+    </section>
+
+
+    <!-- =========================
+         CTA
+    ========================== -->
+
+    <section id="reservar" class="booking">
+
+
+      <div class="booking-content">
+
+
+        <p class="section-label">
+          TU PRÓXIMO CORTE
+        </p>
+
+
+        <h2>
+
+          VENÍ COMO ESTÁS.<br>
+
+          <span>SALÍ CON OTRA ACTITUD.</span>
+
+        </h2>
+
+
+        <a href="#" class="booking-button large">
+
+          RESERVÁ TU TURNO
+
+        </a>
+
+
+      </div>
+
+
+    </section>
+
+
+  </main>
 
 
 </body>
