@@ -72,21 +72,86 @@ button {
    NAVBAR
 ========================= */
 
+@font-face {
+  font-family: 'chueca';
+  src: url('./fonts/chueca.otf');
+}
+
+@font-face {
+  font-family: 'pefont';
+  src: url('./fonts/pefont.ttf');
+}
+
 .navbar {
+  z-index: 10;
 
+  position: relative;
 
-
-  padding: .5em 5%;
+  padding: 2em 2em 1em 2em;
 
   display: flex;
 
-  align-items: center;
-
-  justify-content: space-between;
-
   background: var(--black);
 
+  align-items: center;
+
+
 }
+
+.navbar-content{
+
+  width: 100%;
+justify-content: space-between;
+  display: flex;
+  
+  align-items: center;
+
+
+}
+
+.logo-text{
+  text-align: center;
+  padding-left: 6em;
+  justify-self: center;
+
+}
+
+.chueco-logo{
+  font-family: 'chueca';
+  font-size: clamp(55px, 2vw, 60px);
+  
+}
+
+
+.bar-logo{
+    font-family: 'pefont';
+  font-size: clamp(35px, 2vw, 60px);
+  text-shadow: 3px 3px 0 #000,
+    10px 10px 0 var(--black);
+    rotate: -5deg;
+
+}
+
+.logo {
+  position: absolute;
+  left: clamp(20px, 5vw, 50px);;
+  top: 80%;
+  z-index: 20;
+  width: clamp(220px, 12vw, 160px);
+
+
+  border-radius: 50%;
+  transform: translateY(-50%);
+
+}
+
+.logo img{
+  width: clamp(220px, 12vw, 160px);
+  height: auto;
+  display: block;
+}
+
+
 
 
 /* =========================
@@ -131,72 +196,8 @@ button {
    LOGO
 ========================= */
 
-.logo {
-
-  position: relative;
-
-  width: 120px;
-
-  height: 120px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  justify-content: center;
-
-  border: 2px solid var(--white);
-
-  border-radius: 50%;
-
-  transform: rotate(-5deg);
-
-}
 
 
-.logo-icon {
-
-  position: absolute;
-
-  top: 8px;
-
-  font-size: 20px;
-
-}
-
-
-.logo-name {
-
-  margin-top: 15px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  font-family: 'Bebas Neue', sans-serif;
-
-  font-size: 22px;
-
-  line-height: 0.8;
-
-  letter-spacing: 2px;
-
-}
-
-
-.logo small {
-
-  margin-top: 5px;
-
-  font-size: 8px;
-
-  letter-spacing: 3px;
-
-}
 
 
 /* =========================
@@ -216,6 +217,7 @@ button {
   font-size: 14px;
 
   transition: 0.3s;
+  height: max-content;
 
 }
 
@@ -234,13 +236,27 @@ button {
 ========================= */
 
 .hero {
+  position: relative;
+  z-index: 1;
 
   min-height: 620px;
 
   display: grid;
 
   grid-template-columns: 40% 60%;
+  justify-content: center;
 
+}
+
+.tijera {
+  position: absolute;
+  width: 500px;
+  top: 0;
+  right: -1px;
+
+  opacity: 0.9;
+
+  z-index: 0;
 }
 
 
@@ -678,6 +694,8 @@ blockquote {
 
   margin-top: 40px;
 
+  margin-bottom: 3em;
+
   padding-left: 25px;
 
   border-left: 6px solid var(--red);
@@ -696,7 +714,7 @@ blockquote {
 ========================= */
 
 .services {
-
+  
   padding: 120px 8%;
 
   background: var(--black);
@@ -705,6 +723,7 @@ blockquote {
 
 
 .services-header {
+
 
   margin-bottom: 70px;
 
@@ -1027,11 +1046,7 @@ blockquote {
   }
 
 
-  .logo {
 
-    transform: scale(0.7);
-
-  }
 
 
   .booking-button {
