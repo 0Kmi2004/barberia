@@ -117,6 +117,13 @@ button {
 
 }
 
+@media (max-width: 380px) {
+  .navbar-content{
+
+  margin-left: 32vw;
+  }
+}
+
 .ancla{
 
   
@@ -267,7 +274,7 @@ text-align: center;
   }
 
   .contact-button img{
-    width: 70px;
+    width: 65px;
 
     filter: 
     drop-shadow(5px 5px 8px rgba(0, 0, 0, 0.4));
