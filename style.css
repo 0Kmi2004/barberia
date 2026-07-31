@@ -40,6 +40,12 @@ html {
 
 }
 
+@font-face {
+  font-family: 'dmfont';
+  src: url('./fonts/dmfont.woff2');
+  font-display:swap;
+}
+
 
 body {
 
@@ -47,7 +53,7 @@ body {
 
   color: var(--white);
 
-
+  font-family: 'dmfont', sans-serif;
 
 }
 
@@ -95,6 +101,8 @@ button {
   src: url('./fonts/Roboto Slab.woff2');
   font-display:swap;
 }
+
+
 
 
 .navbar {
