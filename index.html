@@ -12,11 +12,10 @@
 
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Roboto+Slab:wght@700;900&display=swap"
-    rel="stylesheet"
-  >
+  <link rel="preload" href="fonts/Roboto Slab.woff2" as="font" type="font/woff2" crossorigin>
 
+  <link rel="preload" href="style.css" as="style">
+  
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -68,9 +67,7 @@
         <div class="hero-card">
           <h1>
       
-            MÁS QUE UNA<br>
-      
-            <span>BARBERÍA,</span><br>
+            MÁS QUE UNA<br>BARBERÍA<br>
       
             <strong>UNA ACTITUD.</strong>
       
@@ -125,7 +122,7 @@
           muted
           loop
           playsinline
-          preload="metadata"
+          preload="auto"
         >
 
           <source
