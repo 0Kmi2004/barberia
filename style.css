@@ -276,202 +276,637 @@ text-align: center;
    MODAL
 ========================= */
 
-.modal{
-    position:fixed;
-    inset:0;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    background:rgba(0,0,0,.7);
-    backdrop-filter:blur(6px);
-    z-index:9999;
+/* =========================
+   MODAL
+========================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, .78);
+    backdrop-filter: blur(10px);
+
+    z-index: 9999;
+
     overflow-y: auto;
-  
 }
 
-.modal.active{
-    display:flex;
-}
-
-.modal-container{
-  background-color:rgb(17, 4, 4);
-  width: 30em;
-  height: max-content;
-  margin-top: 1em;
-}
-
-.modal-header{
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 2em 0 4em;
-
-}
-
-.steps-container{
-
-  margin: 1em;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.steps{
-
-  width: max-content;
-  display: flex;
-  gap: 2em;
-}
-
-.btn-cerrar{
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2em;
-  padding: 5px 12px 8px 12px;
-  width: 34px;
-  justify-self: end;
-}
-
-.step{
-
-  border-radius: 50%;
-  padding: 5px 12px;
-  width: 34px;
-  text-align: center;
-  border: 2px solid rgb(255, 255, 255);
-}
-
-.step.active{
-    background-color: rgb(255, 145, 0);
-    border: none;
-}
-
-.wizard{
-
-}
-
-.step-content{
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-
-}
-
-.modal-header-title{
-  width: 100%;
-  padding: 1em;
-
-
-  text-align: center;
-}
-
-.modal-header-title h3{
-  font-size: 1.3em;
-  font-weight: 600;
-}
-
-.modal-services-flex{
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  align-items: center;
-  gap: .5em;
-  width: max-content;
-}
-
-.modal-service-card{
-  display: flex;
-  width: 100%;
-  border-radius: 15px;
-  background-color: rgb(17, 4, 4);
-  border: 1px solid rgb(182, 182, 182);
-  padding: .5em;
+.modal.active {
+    display: flex;
 }
 
 
+/* =========================
+   CONTENEDOR
+========================= */
 
-.modal-service-card img{
-  width: 65px;
-  height: 122px;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+.modal-container {
+    position: relative;
+
+    width: min(100%, 430px);
+    max-height: 90vh;
+
+    margin: 0;
+
+    background:
+        linear-gradient(
+            145deg,
+            #190707 0%,
+            #110404 55%,
+            #0d0303 100%
+        );
+
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 18px;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, .75),
+        0 0 0 1px rgba(255, 145, 0, .04);
+
+    overflow-y: auto;
+
+    animation: modalEntrada .3s ease;
 }
 
-.modal-card-text{
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  padding-left: 1em;
+
+@keyframes modalEntrada {
+
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-.modal-subcard-text{
 
-  width: 100%;
-  gap: 1em;
-  font-size: 1.6em;
+/* =========================
+   HEADER
+========================= */
 
+.modal-header {
+
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 80px;
+
+    padding: 18px 55px 8px;
 }
 
-.modal-subcard-text h4{
-font-weight: 600;
-font-size: .8em;
+
+/* =========================
+   PASOS
+========================= */
+
+.steps-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+    margin: 0;
 }
 
-.modal-subcard-text p{
-font-weight: 500;
-font-size: .8em;
-}
+.steps {
 
-.modal-subcard-text strong{
-font-weight: 600;
-font-size: .8em;
-}
-
-.card-radio {
-    padding: 0 1em;
+    position: relative;
 
     display: flex;
     align-items: center;
+
+    gap: 34px;
+
+    width: max-content;
 }
 
-/* Radio original */
-.card-radio input[type="radio"] {
+
+/* Línea entre los pasos */
+
+.steps::before {
+
+    content: "";
+
     position: absolute;
+
+    top: 50%;
+    left: 17px;
+    right: 17px;
+
+    height: 1px;
+
+    background: rgba(255, 255, 255, .22);
+
+    transform: translateY(-50%);
+
+    z-index: 0;
+}
+
+
+/* Círculos */
+
+.step {
+
+    position: relative;
+
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(255, 255, 255, .65);
+
+    background: #110404;
+
+    color: #fff;
+
+    font-size: .85rem;
+    font-weight: 600;
+
+    transition:
+        .25s ease;
+}
+
+
+.step.active {
+
+    color: #160500;
+
+    background: linear-gradient(
+        135deg,
+        #ffad32,
+        #f47700
+    );
+
+    border-color: #ff9200;
+
+    box-shadow:
+        0 0 15px rgba(255, 137, 0, .35);
+}
+
+
+/* =========================
+   BOTÓN CERRAR
+========================= */
+
+.btn-cerrar {
+
+    position: absolute;
+
+    top: 17px;
+    right: 17px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    background: rgba(255, 255, 255, .04);
+
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 50%;
+
+    color: rgba(255, 255, 255, .9);
+
+    font-size: 1.35rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: .25s ease;
+}
+
+
+.btn-cerrar:hover {
+
+    color: #fff;
+
+    background: rgba(255, 120, 0, .15);
+
+    border-color: rgba(255, 140, 0, .5);
+
+    transform: rotate(90deg);
+}
+
+
+/* =========================
+   WIZARD
+========================= */
+
+.wizard {
+    width: 100%;
+}
+
+
+/* =========================
+   CONTENIDO DEL PASO
+========================= */
+
+.step-content {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 0 20px 24px;
+}
+
+
+/* =========================
+   TITULO
+========================= */
+
+.modal-header-title {
+
+    width: 100%;
+
+    padding: 5px 0 20px;
+
+    text-align: center;
+}
+
+
+.modal-header-title h3 {
+
+    margin: 0;
+
+    color: #fff;
+
+    font-size: 1.35rem;
+    font-weight: 700;
+
+    letter-spacing: -.02em;
+}
+
+
+.modal-header-title h3::after {
+
+    content: "";
+
+    display: block;
+
+    width: 38px;
+    height: 2px;
+
+    margin: 10px auto 0;
+
+    background: linear-gradient(
+        90deg,
+        #ffb02e,
+        #f47700
+    );
+
+    border-radius: 5px;
+}
+
+
+/* =========================
+   SERVICIOS
+========================= */
+
+.modal-services-flex {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 10px;
+
+    width: 100%;
+}
+
+
+/* =========================
+   CARD SERVICIO
+========================= */
+
+.modal-service-card {
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-height: 116px;
+
+    padding: 7px;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, .045),
+            rgba(255, 255, 255, .015)
+        );
+
+    border: 1px solid rgba(255, 255, 255, .25);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .03);
+
+    overflow: hidden;
+
+    cursor: pointer;
+
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        background .25s ease,
+        box-shadow .25s ease;
+}
+
+
+/* Brillo lateral */
+
+.modal-service-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 3px;
+    height: 100%;
+
+    background: linear-gradient(
+        180deg,
+        #ffad32,
+        #f47700
+    );
+
     opacity: 0;
+
+    transition: opacity .25s ease;
+}
+
+
+.modal-service-card:hover {
+
+    transform: translateY(-2px);
+
+    border-color: rgba(255, 156, 40, .55);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 140, 0, .08),
+            rgba(255, 255, 255, .02)
+        );
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, .25);
+}
+
+
+/* Card seleccionado */
+
+.modal-service-card:has(input[type="radio"]:checked) {
+
+    border-color: rgba(255, 155, 35, .85);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 132, 0, .13),
+            rgba(255, 255, 255, .025)
+        );
+
+    box-shadow:
+        0 8px 28px rgba(255, 111, 0, .10);
+}
+
+
+.modal-service-card:has(input[type="radio"]:checked)::before {
+    opacity: 1;
+}
+
+
+/* =========================
+   IMAGEN DEL SERVICIO
+========================= */
+
+/*
+   IMPORTANTE:
+   > img evita afectar la imagen
+   del radio-check
+*/
+
+.modal-service-card > img {
+
+    flex-shrink: 0;
+
+    width: 70px;
+    height: 102px;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+
+    filter: brightness(.88) contrast(1.05);
+
+    transition: .3s ease;
+}
+
+
+.modal-service-card:hover > img {
+
+    filter:
+        brightness(1)
+        contrast(1.08);
+
+    transform: scale(1.02);
+}
+
+
+/* =========================
+   TEXTO
+========================= */
+
+.modal-card-text {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+
+    min-width: 0;
+
+    padding: 0 8px 0 14px;
+}
+
+
+.modal-subcard-text {
+
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+
+    gap: 2px;
+
+    color: white;
+}
+
+
+.modal-subcard-text h4 {
+
+    margin: 0 0 3px;
+
+    color: #fff;
+
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+
+.modal-subcard-text p {
+
+    margin: 0;
+
+    color: rgba(255, 255, 255, .85);
+
+    font-size: .95rem;
+    font-weight: 400;
+}
+
+
+.modal-subcard-text strong {
+
+    margin-top: 3px;
+
+    color: #ffae32;
+
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+
+/* =========================
+   RADIO
+========================= */
+
+.card-radio {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    padding: 0 8px 0 10px;
+}
+
+
+/* Radio original */
+
+.card-radio input[type="radio"] {
+
+    position: absolute;
+
+    opacity: 0;
+
     pointer-events: none;
 }
 
-/* Círculo */
-.radio-check {
-    width: 26px;
-    height: 26px;
 
-    border: 2px solid #777;
-    border-radius: 50%;
+/* Círculo */
+
+.radio-check {
 
     display: grid;
     place-items: center;
 
+    width: 27px;
+    height: 27px;
+
+    border: 1px solid rgba(255, 255, 255, .45);
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, .02);
+
     cursor: pointer;
 
-    transition: 
-        background-color .2s ease,
-        border-color .2s ease;
+    transition:
+        background-color .25s ease,
+        border-color .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease;
 }
 
-/* Imagen */
+
+/* Hover */
+
+.modal-service-card:hover .radio-check {
+
+    border-color: rgba(255, 170, 60, .8);
+}
+
+
+/* Seleccionado */
+
+.card-radio input[type="radio"]:checked + .radio-check {
+
+    background: linear-gradient(
+        135deg,
+        #ffb52e,
+        #f47700
+    );
+
+    border-color: #ff9d20;
+
+    box-shadow:
+        0 0 0 4px rgba(255, 139, 0, .10),
+        0 0 12px rgba(255, 139, 0, .25);
+
+    transform: scale(1.05);
+}
+
+
+/* =========================
+   CHECK
+========================= */
+
 .radio-check img {
-    width: 14px;
-    height: 14px;
+
+    width: 13px !important;
+    height: 13px !important;
 
     object-fit: contain;
 
     opacity: 0;
+
     transform: scale(0);
 
     transition:
@@ -479,34 +914,232 @@ font-size: .8em;
         transform .15s ease;
 }
 
-/* Seleccionado */
-.card-radio input[type="radio"]:checked + .radio-check {
-    background: #d6a63d;
-    border-color: #d6a63d;
-}
 
-/* Mostrar icono */
 .card-radio input[type="radio"]:checked + .radio-check img {
+
     opacity: 1;
+
     transform: scale(1);
 }
 
-.modal-button-footer{
 
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 1em;
+/* =========================
+   FOOTER BOTÓN
+========================= */
+
+.modal-button-footer {
+
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+
+    padding: 14px 0 0;
 }
 
-.modal-button{
-  background-color: rgb(250, 124, 6);
-  color: rgb(17, 4, 4);
-  padding: 1em 4em;
-  width: 100%;
-  font-weight: 600;
-  font-size: 1em;
-  border: none;
+
+.modal-button {
+
+    position: relative;
+
+    width: 100%;
+
+    min-height: 48px;
+
+    padding: 12px 20px;
+
+    border: none;
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff9c19,
+            #f47700
+        );
+
+    color: #180500;
+
+    font-size: .9rem;
+    font-weight: 700;
+
+    letter-spacing: .02em;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 20px rgba(244, 119, 0, .18);
+
+    overflow: hidden;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        filter .2s ease;
+}
+
+
+.modal-button::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -100%;
+
+    width: 60%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, .25),
+        transparent
+    );
+
+    transform: skewX(-20deg);
+
+    transition: .5s ease;
+}
+
+
+.modal-button:hover::before {
+    left: 130%;
+}
+
+
+.modal-button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 25px rgba(244, 119, 0, .28);
+
+    filter: brightness(1.05);
+}
+
+
+.modal-button:active {
+
+    transform: translateY(0);
+
+    box-shadow:
+        0 5px 12px rgba(244, 119, 0, .18);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 500px) {
+
+    .modal {
+        padding: 12px;
+    }
+
+    .modal-container {
+        width: 100%;
+        max-height: 94vh;
+
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        min-height: 72px;
+
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+
+    .steps {
+        gap: 27px;
+    }
+
+    .step {
+        width: 31px;
+        height: 31px;
+
+        font-size: .8rem;
+    }
+
+    .modal-header-title h3 {
+        font-size: 1.2rem;
+    }
+
+    .modal-service-card {
+        min-height: 110px;
+    }
+
+    .modal-service-card > img {
+        width: 65px;
+        height: 96px;
+    }
+
+    .modal-subcard-text h4 {
+        font-size: 1rem;
+    }
+
+    .modal-subcard-text p {
+        font-size: .9rem;
+    }
+
+    .modal-subcard-text strong {
+        font-size: .95rem;
+    }
+
+    .card-radio {
+        padding-right: 5px;
+    }
+}
+
+
+/* =========================
+   PANTALLAS MUY PEQUEÑAS
+========================= */
+
+@media (max-width: 360px) {
+
+    .modal-header {
+        padding-left: 25px;
+        padding-right: 35px;
+    }
+
+    .steps {
+        gap: 19px;
+    }
+
+    .step {
+        width: 28px;
+        height: 28px;
+    }
+
+    .modal-service-card > img {
+        width: 58px;
+        height: 90px;
+    }
+
+    .modal-card-text {
+        padding-left: 10px;
+    }
+
+    .modal-subcard-text h4 {
+        font-size: .92rem;
+    }
+
+    .modal-subcard-text p {
+        font-size: .82rem;
+    }
+
+    .modal-subcard-text strong {
+        font-size: .88rem;
+    }
+
+    .radio-check {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 /* =========================
