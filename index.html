@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +11,10 @@
 
   <link rel="preload" href="fonts/Roboto Slab.woff2" as="font" type="font/woff2" crossorigin>
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+
   <link rel="preload" href="style.css" as="style">
-  
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -34,7 +37,7 @@
         <p class="chueco-logo">Chueco Gomez</p>
         <p class="bar-logo">Barbería</p>
       </div>
-            <a href="#reservar" class="booking-button">
+      <a id="btnReservar" class="booking-button">
         RESERVÁ TURNO
       </a>
 
@@ -42,16 +45,16 @@
 
   </header>
 
-
   <main>
     <a href="#contacto" class="contact-button">
       <img src="assets/wame.webp" alt="WhatsApp" width="65" height="64">
     </a>
+
   
     <!-- =========================
            HERO
       ========================== -->
-  
+
     <section class="hero">
 
 
@@ -59,50 +62,50 @@
       <!-- PANEL ROJO -->
 
       <div class="hero-content">
-      
+
         <div class="hero-card">
           <h1>
-      
+
             MÁS QUE UNA<br>BARBERÍA<br>
-      
+
             <strong>UNA ACTITUD.</strong>
-      
+
           </h1>
-      
-      
+
+
           <div class="hero-location">
-      
+
             Viví la experiencia en
             <strong>Av. Caseros 2631</strong>
-      
+
           </div>
-      
-      
+
+
           <div class="rating">
-      
-      
+
+
             <p>
               Valorado en 4.9 estrellas por Google
             </p>
-      
-      
+
+
             <div class="stars">
-      
+
               <span>★</span>
               <span>★</span>
               <span>★</span>
               <span>★</span>
               <span>★</span>
-      
+
             </div>
-      
-      
+
+
           </div>
         </div>
-        
 
 
-        
+
+
 
 
       </div>
@@ -113,18 +116,9 @@
       <div class="hero-video">
 
 
-        <video
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="auto"
-        >
+        <video autoplay muted loop playsinline preload="auto">
 
-          <source
-            src="assets/barvideo.mp4"
-            type="video/mp4"
-          >
+          <source src="assets/barvideo.mp4" type="video/mp4">
 
           Tu navegador no soporta videos.
 
@@ -164,12 +158,7 @@
       <div class="about-image">
 
 
-        <img
-          src="assets/barabout.webp"
-          alt="Interior de la barbería"
-          width="400"
-          height="600"
-        >
+        <img src="assets/barabout.webp" alt="Interior de la barbería" width="400" height="600">
 
 
         <div class="about-stamp">
@@ -510,8 +499,115 @@
 
 
   </main>
+    
+    <!-- =========================
+           MODAL
+      ========================== -->
+      <div class="modal" id="modalReserva">
+        <div class="modal-container">
 
+          <div class="modal-header">
+
+            <div class="steps-container">
+              <div class="steps">
+                <div class="step active">1</div>
+                <div class="step">2</div>
+                <div class="step">3</div>
+                <div class="step">4</div>
+              </div>
+            </div>
+            <button id="btnCerrar" class="btn-cerrar">&times;</button>
+          </div>
+
+          <div class="wizard">
+              
+                <!-- PASO 1 -->
+              
+            <section class="step-content active" data-step="1">
+              <div class="modal-header-title">
+                <h3>Seleccioná un servicio</h3>
+              </div>
+
+              <div class="modal-services-flex">
+
+                <article class="modal-service-card">
+                  <img src="assets/corte1.webp" alt="">
+                  
+                  <div class="modal-card-text">
+                    <div class="modal-subcard-text">
+                      <h4>Corte</h4>
+                      <p>⏱ 45 min</p>
+                      <strong>$15.000</strong>
+                      </div>
+                      <label class="card-radio">
+                      
+                        <input type="radio" name="service" id="corte">
+                      
+                        <span class="radio-check">
+                          <img src="assets/check.png" alt="">
+                        </span>
+                      
+                      </label>
+                      </div>
+                </article>
+
+                <article class="modal-service-card">
+                  <img src="assets/corte2.webp" alt="">
+                  
+                  <div class="modal-card-text">
+                    <div class="modal-subcard-text">
+                      <h4>Barba</h4>
+                      <p>⏱ 30 min</p>
+                      <strong>$8.000</strong>
+                      </div>
+                      <label class="card-radio">
+                      
+                        <input type="radio" name="service" id="barba">
+                      
+                        <span class="radio-check">
+                          <img src="assets/check.png" alt="">
+                        </span>
+                      
+                      </label>
+                      </div>
+                </article>
+
+                <article class="modal-service-card">
+                  <img src="assets/corte3.webp" alt="">
+                  
+                  <div class="modal-card-text">
+                    <div class="modal-subcard-text">
+                      <h4>Corte + Barba</h4>
+                      <p>⏱ 60 min</p>
+                      <strong>$20.000</strong>
+                      </div>
+                      <label class="card-radio">
+                      
+                        <input type="radio" name="service" id="cortebarba">
+                      
+                        <span class="radio-check">
+                          <img src="assets/check.png" alt="">
+                        </span>
+                      
+                      </label>
+                      </div>
+                </article>
+
+                <div class="modal-button-footer">
+                  <button class="modal-button" id="btnSiguiente1">
+                    SIGUIENTE
+                  </button>
+                </div>
+                
+
+              </div>
+              </section>
+              
+              
+          </div>
+        </div>
+      </div>
 
 </body>
-
+<script src="script.js"></script>
 </html>

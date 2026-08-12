@@ -272,6 +272,242 @@ text-align: center;
 
 }
 
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,.7);
+    backdrop-filter:blur(6px);
+    z-index:9999;
+    overflow-y: auto;
+  
+}
+
+.modal.active{
+    display:flex;
+}
+
+.modal-container{
+  background-color:rgb(17, 4, 4);
+  width: 30em;
+  height: max-content;
+  margin-top: 1em;
+}
+
+.modal-header{
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 2em 0 4em;
+
+}
+
+.steps-container{
+
+  margin: 1em;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.steps{
+
+  width: max-content;
+  display: flex;
+  gap: 2em;
+}
+
+.btn-cerrar{
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2em;
+  padding: 5px 12px 8px 12px;
+  width: 34px;
+  justify-self: end;
+}
+
+.step{
+
+  border-radius: 50%;
+  padding: 5px 12px;
+  width: 34px;
+  text-align: center;
+  border: 2px solid rgb(255, 255, 255);
+}
+
+.step.active{
+    background-color: rgb(255, 145, 0);
+    border: none;
+}
+
+.wizard{
+
+}
+
+.step-content{
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.modal-header-title{
+  width: 100%;
+  padding: 1em;
+
+
+  text-align: center;
+}
+
+.modal-header-title h3{
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.modal-services-flex{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  align-items: center;
+  gap: .5em;
+  width: max-content;
+}
+
+.modal-service-card{
+  display: flex;
+  width: 100%;
+  border-radius: 15px;
+  background-color: rgb(17, 4, 4);
+  border: 1px solid rgb(182, 182, 182);
+  padding: .5em;
+}
+
+
+
+.modal-service-card img{
+  width: 65px;
+  height: 122px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.modal-card-text{
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1em;
+}
+
+.modal-subcard-text{
+
+  width: 100%;
+  gap: 1em;
+  font-size: 1.6em;
+
+}
+
+.modal-subcard-text h4{
+font-weight: 600;
+font-size: .8em;
+}
+
+.modal-subcard-text p{
+font-weight: 500;
+font-size: .8em;
+}
+
+.modal-subcard-text strong{
+font-weight: 600;
+font-size: .8em;
+}
+
+.card-radio {
+    padding: 0 1em;
+
+    display: flex;
+    align-items: center;
+}
+
+/* Radio original */
+.card-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Círculo */
+.radio-check {
+    width: 26px;
+    height: 26px;
+
+    border: 2px solid #777;
+    border-radius: 50%;
+
+    display: grid;
+    place-items: center;
+
+    cursor: pointer;
+
+    transition: 
+        background-color .2s ease,
+        border-color .2s ease;
+}
+
+/* Imagen */
+.radio-check img {
+    width: 14px;
+    height: 14px;
+
+    object-fit: contain;
+
+    opacity: 0;
+    transform: scale(0);
+
+    transition:
+        opacity .15s ease,
+        transform .15s ease;
+}
+
+/* Seleccionado */
+.card-radio input[type="radio"]:checked + .radio-check {
+    background: #d6a63d;
+    border-color: #d6a63d;
+}
+
+/* Mostrar icono */
+.card-radio input[type="radio"]:checked + .radio-check img {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.modal-button-footer{
+
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 1em;
+}
+
+.modal-button{
+  background-color: rgb(250, 124, 6);
+  color: rgb(17, 4, 4);
+  padding: 1em 4em;
+  width: 100%;
+  font-weight: 600;
+  font-size: 1em;
+  border: none;
+}
 
 /* =========================
    HERO
