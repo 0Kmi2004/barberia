@@ -2,6 +2,8 @@ const modal = document.getElementById("modalReserva");
 
 const abrir = document.getElementById("btnReservar");
 
+const abrir2 = document.getElementById("btnReservar2");
+
 const cerrar = document.getElementById("btnCerrar");
 
 const paso1 = document.querySelector('.step-content[data-step="1"]');
@@ -41,10 +43,13 @@ function resetWizard() {
     steps[3].classList.remove("active");
 }
 
-abrir.addEventListener("click", () => {
+function abrirModal() {
     modal.classList.add("active");
     resetWizard();
-});
+}
+
+abrir.addEventListener("click", abrirModal);
+abrir2.addEventListener("click", abrirModal);
 
 cerrar.addEventListener("click", () => {
     modal.classList.remove("active");
