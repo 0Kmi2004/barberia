@@ -788,6 +788,7 @@ text-align: center;
     display: flex;
     justify-content: space-between;
     padding: 14px 0 0;
+    gap: 1em;
 
 }
 
@@ -795,7 +796,7 @@ text-align: center;
     position: relative;
     width: max-content;
     min-height: 48px;
-    padding: 1em 4.5em;
+    padding: 1em 4em;
     border: none;
     border-radius: 8px;
     background:
