@@ -474,7 +474,7 @@ text-align: center;
 
     color: #fff;
 
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     font-weight: 400;
 
     letter-spacing: -.02em;
@@ -607,8 +607,8 @@ text-align: center;
 
     flex-shrink: 0;
 
-    width: 70px;
-    height: 102px;
+    width: 68px;
+    height: 100px;
 
     object-fit: cover;
 
@@ -1106,7 +1106,7 @@ text-align: center;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 7px;
-    padding: 1em;
+    padding: .5em;
 }
 
 .horario{
