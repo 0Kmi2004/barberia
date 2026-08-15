@@ -1,5 +1,5 @@
 /* =========================
-   VARIABLES
+   BASE - VARIABLES
 ========================= */
 
 :root {
@@ -18,9 +18,8 @@
 
 }
 
-
 /* =========================
-   RESET
+   BASE - RESET
 ========================= */
 
 * {
@@ -33,19 +32,11 @@
 
 }
 
-
 html {
 
   scroll-behavior: smooth;
 
 }
-
-@font-face {
-  font-family: 'dmfont';
-  src: url('./fonts/dmfont.woff2');
-  font-display:swap;
-}
-
 
 body {
 
@@ -57,7 +48,6 @@ body {
 
 }
 
-
 a {
 
   color: inherit;
@@ -66,16 +56,14 @@ a {
 
 }
 
-
 button {
 
   font-family: inherit;
-
+  padding: 0;
 }
 
-
 /* =========================
-   NAVBAR
+   BASE - FUENTES
 ========================= */
 
 @font-face {
@@ -102,8 +90,16 @@ button {
   font-display:swap;
 }
 
+@font-face {
+  font-family: 'dmfont';
+  src: url('./fonts/dmfont.woff2');
+  font-display:swap;
+}
 
 
+/* =========================
+   NAVBAR - LOGO
+========================= */
 
 .navbar {
   z-index: 10;
@@ -147,8 +143,6 @@ button {
   }
 }
 
-
-
 .logo-text{
   text-align: center;
 
@@ -161,7 +155,6 @@ button {
   font-size: clamp(32px, 7vw, 80px);
   rotate: -5deg;
 }
-
 
 .bar-logo{
     font-family: 'pefont';
@@ -191,49 +184,8 @@ button {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
-
-
-
 /* =========================
-   MENU
-========================= */
-
-.menu-button {
-
-  width: 50px;
-
-  height: 40px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: space-between;
-
-  background: transparent;
-
-  border: none;
-
-  cursor: pointer;
-
-}
-
-
-.menu-button span {
-
-  width: 50px;
-
-  height: 5px;
-
-  background: var(--white);
-
-  border-radius: 5px;
-
-}
-
-
-/* =========================
-   BUTTON
+   NAVBAR - BOTÓN RESERVA
 ========================= */
 
 .booking-button {
@@ -253,7 +205,6 @@ button {
 text-align: center;
 }
 
-
 .booking-button:hover {
 
   background: var(--red);
@@ -269,15 +220,11 @@ text-align: center;
     display: none;
 
   }
-
 }
+  
 
 /* =========================
-   MODAL
-========================= */
-
-/* =========================
-   MODAL
+   MODALES
 ========================= */
 
 .modal {
@@ -302,11 +249,6 @@ text-align: center;
     display: flex;
 }
 
-
-/* =========================
-   CONTENEDOR
-========================= */
-
 .modal-container {
     position: relative;
 
@@ -314,11 +256,12 @@ text-align: center;
     max-height: 90vh;
 
     margin: 0;
+    padding: .5em;
 
     background:
         linear-gradient(
             145deg,
-            #190707 0%,
+            #071917 0%,
             #110404 55%,
             #0d0303 100%
         );
@@ -335,7 +278,6 @@ text-align: center;
     animation: modalEntrada .3s ease;
 }
 
-
 @keyframes modalEntrada {
 
     from {
@@ -349,11 +291,6 @@ text-align: center;
     }
 }
 
-
-/* =========================
-   HEADER
-========================= */
-
 .modal-header {
 
     position: relative;
@@ -364,13 +301,9 @@ text-align: center;
 
     min-height: 80px;
 
-    padding: 18px 55px 8px;
+
+    padding: 1em 2em 1em;
 }
-
-
-/* =========================
-   PASOS
-========================= */
 
 .steps-container {
     display: flex;
@@ -392,9 +325,6 @@ text-align: center;
     width: max-content;
 }
 
-
-/* Línea entre los pasos */
-
 .steps::before {
 
     content: "";
@@ -413,9 +343,6 @@ text-align: center;
 
     z-index: 0;
 }
-
-
-/* Círculos */
 
 .step {
 
@@ -447,7 +374,6 @@ text-align: center;
         .25s ease;
 }
 
-
 .step.active {
 
     color: #160500;
@@ -462,26 +388,23 @@ text-align: center;
 
     box-shadow:
         0 0 15px rgba(255, 137, 0, .35);
+
+    
 }
-
-
-/* =========================
-   BOTÓN CERRAR
-========================= */
 
 .btn-cerrar {
 
     position: absolute;
 
-    top: 17px;
-    right: 17px;
+    top: 24px;
+    right: 18px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    width: 32px;
-    height: 32px;
+    width: 1.5em;
+    height: 1.5em;
 
     padding: 0;
 
@@ -500,7 +423,6 @@ text-align: center;
     transition: .25s ease;
 }
 
-
 .btn-cerrar:hover {
 
     color: #fff;
@@ -512,23 +434,22 @@ text-align: center;
     transform: rotate(90deg);
 }
 
-
-/* =========================
-   WIZARD
-========================= */
-
 .wizard {
     width: 100%;
 }
 
-
 /* =========================
-   CONTENIDO DEL PASO
+   MODAL 1 - CONTENIDO
 ========================= */
 
 .step-content {
 
-    display: flex;
+    display: none;
+}
+
+.step-content.active {
+
+    display: block;
     flex-direction: column;
     align-items: center;
 
@@ -537,11 +458,6 @@ text-align: center;
     padding: 0 20px 24px;
 }
 
-
-/* =========================
-   TITULO
-========================= */
-
 .modal-header-title {
 
     width: 100%;
@@ -549,8 +465,8 @@ text-align: center;
     padding: 5px 0 20px;
 
     text-align: center;
+      color: #d1c40d;
 }
-
 
 .modal-header-title h3 {
 
@@ -558,37 +474,23 @@ text-align: center;
 
     color: #fff;
 
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: 1.6rem;
+    font-weight: 400;
 
     letter-spacing: -.02em;
 }
 
+.modal-header-title h4 {
 
-.modal-header-title h3::after {
+    margin: 1em 0 0;
 
-    content: "";
+    color: #fff;
 
-    display: block;
+    font-size: 1rem;
+    font-weight: 500;
 
-    width: 38px;
-    height: 2px;
-
-    margin: 10px auto 0;
-
-    background: linear-gradient(
-        90deg,
-        #ffb02e,
-        #f47700
-    );
-
-    border-radius: 5px;
+    letter-spacing: -.02em;
 }
-
-
-/* =========================
-   SERVICIOS
-========================= */
 
 .modal-services-flex {
 
@@ -601,9 +503,8 @@ text-align: center;
     width: 100%;
 }
 
-
 /* =========================
-   CARD SERVICIO
+   MODAL 1 - SERVICIOS
 ========================= */
 
 .modal-service-card {
@@ -643,9 +544,6 @@ text-align: center;
         box-shadow .25s ease;
 }
 
-
-/* Brillo lateral */
-
 .modal-service-card::before {
 
     content: "";
@@ -669,7 +567,6 @@ text-align: center;
     transition: opacity .25s ease;
 }
 
-
 .modal-service-card:hover {
 
     transform: translateY(-2px);
@@ -687,9 +584,6 @@ text-align: center;
         0 8px 25px rgba(0, 0, 0, .25);
 }
 
-
-/* Card seleccionado */
-
 .modal-service-card:has(input[type="radio"]:checked) {
 
     border-color: rgba(255, 155, 35, .85);
@@ -705,21 +599,9 @@ text-align: center;
         0 8px 28px rgba(255, 111, 0, .10);
 }
 
-
 .modal-service-card:has(input[type="radio"]:checked)::before {
     opacity: 1;
 }
-
-
-/* =========================
-   IMAGEN DEL SERVICIO
-========================= */
-
-/*
-   IMPORTANTE:
-   > img evita afectar la imagen
-   del radio-check
-*/
 
 .modal-service-card > img {
 
@@ -737,7 +619,6 @@ text-align: center;
     transition: .3s ease;
 }
 
-
 .modal-service-card:hover > img {
 
     filter:
@@ -746,11 +627,6 @@ text-align: center;
 
     transform: scale(1.02);
 }
-
-
-/* =========================
-   TEXTO
-========================= */
 
 .modal-card-text {
 
@@ -765,7 +641,6 @@ text-align: center;
     padding: 0 8px 0 14px;
 }
 
-
 .modal-subcard-text {
 
     display: flex;
@@ -778,7 +653,6 @@ text-align: center;
     color: white;
 }
 
-
 .modal-subcard-text h4 {
 
     margin: 0 0 3px;
@@ -788,7 +662,6 @@ text-align: center;
     font-size: 1.05rem;
     font-weight: 700;
 }
-
 
 .modal-subcard-text p {
 
@@ -800,7 +673,6 @@ text-align: center;
     font-weight: 400;
 }
 
-
 .modal-subcard-text strong {
 
     margin-top: 3px;
@@ -810,11 +682,6 @@ text-align: center;
     font-size: 1rem;
     font-weight: 700;
 }
-
-
-/* =========================
-   RADIO
-========================= */
 
 .card-radio {
 
@@ -827,9 +694,6 @@ text-align: center;
     padding: 0 8px 0 10px;
 }
 
-
-/* Radio original */
-
 .card-radio input[type="radio"] {
 
     position: absolute;
@@ -838,9 +702,6 @@ text-align: center;
 
     pointer-events: none;
 }
-
-
-/* Círculo */
 
 .radio-check {
 
@@ -865,16 +726,10 @@ text-align: center;
         box-shadow .25s ease;
 }
 
-
-/* Hover */
-
 .modal-service-card:hover .radio-check {
 
     border-color: rgba(255, 170, 60, .8);
 }
-
-
-/* Seleccionado */
 
 .card-radio input[type="radio"]:checked + .radio-check {
 
@@ -893,11 +748,6 @@ text-align: center;
     transform: scale(1.05);
 }
 
-
-/* =========================
-   CHECK
-========================= */
-
 .radio-check img {
 
     width: 13px !important;
@@ -914,7 +764,6 @@ text-align: center;
         transform .15s ease;
 }
 
-
 .card-radio input[type="radio"]:checked + .radio-check img {
 
     opacity: 1;
@@ -922,12 +771,7 @@ text-align: center;
     transform: scale(1);
 }
 
-
-/* =========================
-   FOOTER BOTÓN
-========================= */
-
-.modal-button-footer {
+.modal-button-footer0 {
 
     width: 100%;
 
@@ -937,47 +781,44 @@ text-align: center;
     padding: 14px 0 0;
 }
 
-
-.modal-button {
-
-    position: relative;
+.modal-button-footer {
 
     width: 100%;
 
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0 0;
+
+}
+
+.modal-button {
+    position: relative;
+    width: max-content;
     min-height: 48px;
-
-    padding: 12px 20px;
-
+    padding: 1em 4.5em;
     border: none;
     border-radius: 8px;
-
     background:
         linear-gradient(
             135deg,
             #ff9c19,
-            #f47700
-        );
-
+            #f47700);
     color: #180500;
-
     font-size: .9rem;
     font-weight: 700;
-
     letter-spacing: .02em;
-
     cursor: pointer;
-
-    box-shadow:
-        0 8px 20px rgba(244, 119, 0, .18);
-
+    box-shadow: 0 8px 20px rgba(244, 119, 0, .18);
     overflow: hidden;
-
     transition:
         transform .2s ease,
         box-shadow .2s ease,
         filter .2s ease;
 }
 
+.modal-button.pri{
+  width: 100%;
+}
 
 .modal-button::before {
 
@@ -1003,11 +844,9 @@ text-align: center;
     transition: .5s ease;
 }
 
-
 .modal-button:hover::before {
     left: 130%;
 }
-
 
 .modal-button:hover {
 
@@ -1019,7 +858,6 @@ text-align: center;
     filter: brightness(1.05);
 }
 
-
 .modal-button:active {
 
     transform: translateY(0);
@@ -1028,10 +866,13 @@ text-align: center;
         0 5px 12px rgba(244, 119, 0, .18);
 }
 
-
-/* =========================
-   RESPONSIVE
-========================= */
+.modal-button.secondary{
+      background: #1b1b1b;
+      color: white;
+      font-weight: 500;
+      border: 1px solid rgb(104, 104, 104);
+          padding: 1em 2.5em;
+}
 
 @media (max-width: 500px) {
 
@@ -1094,11 +935,6 @@ text-align: center;
     }
 }
 
-
-/* =========================
-   PANTALLAS MUY PEQUEÑAS
-========================= */
-
 @media (max-width: 360px) {
 
     .modal-header {
@@ -1142,8 +978,362 @@ text-align: center;
     }
 }
 
+
+/* =================================
+   MODAL DOOOOOOOS
+================================= */
+.calendar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.calendar {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    background: #1b1b1b;
+    border-radius: 15px;
+    box-sizing: border-box;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.calendar-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.calendar-nav {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    background: #1b1b1b;
+    color: #ffffff;
+    font-size: 34px;
+    cursor: pointer;
+
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: .2s;
+}
+
+.calendar-nav:hover {
+    background: #222;
+    color: white;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+    text-align: center;
+    font-size: 14px;
+  font-weight: 300;
+    color: #f0f0f0;
+    margin: .5em 0em;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 7px;
+}
+
+.calendar-day {
+    aspect-ratio: 1.5;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+
+    font-size: 16px;
+    font-weight: 500;
+    color: #ffffff;
+
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.calendar-day:hover {
+    background: #eee;
+    color: #000000;
+}
+
+.calendar-day:focus {
+    background: #f47700;
+    color: #000000;
+    scale: 1.03;
+}
+
+.calendar-day.other-month {
+    color: #b4b4b4;
+
+}
+
+.calendar-day.other-month:hover {
+    color: #b4b4b4;
+  background-color: #1b1b1b;
+  cursor: default;
+}
+
+.calendar-day.selected {
+
+}
+
+.calendar-day.selected:hover {
+
+}
+
 /* =========================
-   HERO
+   MODAL 3
+========================= */
+
+.horarios{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    padding: 1em;
+}
+
+.horario{
+  background-color: #300d0d;
+  color: white;
+  border-radius: 10px;
+  font-size: 18px;
+  padding: .8em 0em;
+
+  border: none;
+  cursor: pointer;
+}
+
+.horario:hover{
+  scale: 1.03;
+}
+
+.horario:focus{
+  background-color: #f47700;
+  scale: 1.03;
+  color: #000;
+}
+
+/* =================================
+   MODAL 4
+================================= */
+
+.personal-data-form {
+    width: 100%;
+    max-width: 410px;
+
+    margin: .5em auto 0;
+}
+
+.form-group {
+    width: 100%;
+
+
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #f1f1f1;
+
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.form-group label span {
+    color: #8b8b8b;
+
+    font-weight: 400;
+}
+
+.input-wrapper {
+    position: relative;
+
+    width: 100%;
+}
+
+.input-wrapper input {
+
+    width: 100%;
+
+    height: 42px;
+
+    padding: 0 14px 0 40px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #36393d;
+
+    border-radius: 6px;
+
+    outline: none;
+
+    background: #15181b;
+
+    color: #f5f5f5;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.input-wrapper input::placeholder {
+    color: #777b80;
+}
+
+.input-wrapper input:focus {
+
+    border-color: #e9b949;
+
+    background: #191c20;
+
+    box-shadow:
+        0 0 0 2px rgba(233, 185, 73, .08);
+}
+
+.input-icon {
+
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #777b80;
+
+    font-size: 13px;
+
+    pointer-events: none;
+
+    transition: color .2s ease;
+}
+
+.input-wrapper:focus-within .input-icon {
+    color: #e9b949;
+}
+
+.textarea-wrapper {
+    position: relative;
+
+    width: 100%;
+}
+
+.textarea-wrapper textarea {
+
+    width: 100%;
+
+    min-height: 75px;
+
+    padding: 12px 14px 12px 40px;
+
+    box-sizing: border-box;
+
+    resize: vertical;
+
+    border: 1px solid #36393d;
+
+    border-radius: 6px;
+
+    outline: none;
+
+    background: #15181b;
+
+    color: #f5f5f5;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.textarea-wrapper textarea::placeholder {
+    color: #777b80;
+}
+
+.textarea-wrapper textarea:focus {
+
+    border-color: #e9b949;
+
+    background: #191c20;
+
+    box-shadow:
+        0 0 0 2px rgba(233, 185, 73, .08);
+}
+
+.textarea-icon {
+
+    position: absolute;
+
+    top: 13px;
+    left: 14px;
+
+    color: #777b80;
+
+    font-size: 13px;
+
+    pointer-events: none;
+}
+
+.textarea-wrapper:focus-within .textarea-icon {
+    color: #e9b949;
+}
+
+.form-error {
+
+    display: block;
+
+    min-height: 15px;
+
+    margin-top: 4px;
+
+    color: #e57373;
+
+    font-size: 11px;
+}
+
+.input-wrapper.error input,
+.textarea-wrapper.error textarea {
+
+    border-color: #c85c5c;
+}
+
+.input-wrapper.success input {
+
+    border-color: #6d9b68;
+}
+
+/* =========================
+   BOTÓN FLOTANTE
 ========================= */
 
 .contact-button {
@@ -1161,6 +1351,9 @@ text-align: center;
     drop-shadow(5px 5px 8px rgba(0, 0, 0, 0.4));
   }
 
+/* =========================
+   HERO
+========================= */
 
 .hero {
   position: relative;
@@ -1186,11 +1379,6 @@ text-align: center;
   z-index: 0;
 }
 
-
-/* =========================
-   HERO CONTENT
-========================= */
-
 .hero-content {
 
   position: relative;
@@ -1208,9 +1396,6 @@ text-align: center;
   overflow: hidden;
 
 }
-
-
-/* TEXTURE */
 
 .hero-content::before {
 
@@ -1242,9 +1427,6 @@ text-align: center;
 
 }
 
-
-/* ICON */
-
 .hero-icon {
 
   position: relative;
@@ -1256,9 +1438,6 @@ text-align: center;
   font-size: 50px;
 
 }
-
-
-/* TITLE */
 
 .hero h1 {
 
@@ -1274,22 +1453,17 @@ text-align: center;
 
 }
 
-
 .hero h1 span {
 
   color: var(--white);
 
 }
 
-
 .hero h1 strong {
 
   color: var(--black);
 
 }
-
-
-/* LOCATION */
 
 .hero-location {
 
@@ -1309,15 +1483,11 @@ text-align: center;
 
 }
 
-
 .hero-location strong {
 
   color: var(--yellow);
 
 }
-
-
-/* RATING */
 
 .rating {
 
@@ -1329,7 +1499,6 @@ text-align: center;
 
 }
 
-
 .rating p {
 
   margin-bottom: 5px;
@@ -1337,7 +1506,6 @@ text-align: center;
   font-size: 14px;
 
 }
-
 
 .stars {
 
@@ -1349,7 +1517,6 @@ text-align: center;
 
 }
 
-
 .stars span {
 
   color: var(--yellow);
@@ -1357,11 +1524,6 @@ text-align: center;
   font-size: 42px;
 
 }
-
-
-/* =========================
-   HERO VIDEO
-========================= */
 
 .hero-video {
 
@@ -1375,7 +1537,6 @@ text-align: center;
 
 }
 
-
 .hero-video video {
 
   width: 100%;
@@ -1387,7 +1548,6 @@ text-align: center;
   object-fit: cover;
 
 }
-
 
 .video-overlay {
 
@@ -1407,7 +1567,6 @@ text-align: center;
 
 }
 
-
 .video-label {
 
   position: absolute;
@@ -1424,7 +1583,6 @@ text-align: center;
 
 }
 
-
 .video-label span {
 
   font-family: 'Bebas Neue', sans-serif;
@@ -1432,7 +1590,6 @@ text-align: center;
   font-size: 70px;
 
 }
-
 
 .video-label p {
 
@@ -1443,7 +1600,6 @@ text-align: center;
   line-height: 1.1;
 
 }
-
 
 /* =========================
    ABOUT
@@ -1469,9 +1625,6 @@ text-align: center;
 
 }
 
-
-/* IMAGE */
-
 .about-image {
 
   position: relative;
@@ -1479,7 +1632,6 @@ text-align: center;
   height: 550px;
 
 }
-
 
 .about-image img {
 
@@ -1492,7 +1644,6 @@ text-align: center;
   filter: grayscale(100%) contrast(1.15);
 
 }
-
 
 .about-image::after {
 
@@ -1507,10 +1658,6 @@ text-align: center;
   pointer-events: none;
 
 }
-
-
-/* STAMP */
-
 .about-stamp {
 
   position: absolute;
@@ -1547,9 +1694,6 @@ text-align: center;
 
 }
 
-
-/* TEXT */
-
 .section-label {
 
   margin-bottom: 20px;
@@ -1564,11 +1708,8 @@ text-align: center;
 
 }
 
-
 .about h2,
-
 .services h2,
-
 .booking h2 {
 
   font-family: 'Roboto Slab', serif;
@@ -1579,17 +1720,13 @@ text-align: center;
 
 }
 
-
 .about h2 span,
-
 .services h2 span,
-
 .booking h2 span {
 
   color: var(--red);
 
 }
-
 
 .about-line {
 
@@ -1603,7 +1740,6 @@ text-align: center;
 
 }
 
-
 .about-text {
 
   max-width: 500px;
@@ -1615,7 +1751,6 @@ text-align: center;
   line-height: 1.6;
 
 }
-
 
 blockquote {
 
@@ -1635,7 +1770,6 @@ blockquote {
 
 }
 
-
 /* =========================
    SERVICES
 ========================= */
@@ -1647,7 +1781,6 @@ blockquote {
   background: var(--black);
 
 }
-
 
 .services-header {
 
@@ -1662,7 +1795,6 @@ blockquote {
 
 }
 
-
 .services-description {
 
   max-width: 300px;
@@ -1672,9 +1804,6 @@ blockquote {
   font-size: 17px;
 
 }
-
-
-/* GRID */
 
 .services-grid {
 
@@ -1687,9 +1816,6 @@ blockquote {
   background: #333;
 
 }
-
-
-/* CARD */
 
 .service-card {
 
@@ -1707,7 +1833,6 @@ blockquote {
 
 }
 
-
 .service-card:hover {
 
   background: #181818;
@@ -1716,13 +1841,11 @@ blockquote {
 
 }
 
-
 .service-card.featured {
 
   background: var(--red);
 
 }
-
 
 .service-top {
 
@@ -1734,7 +1857,6 @@ blockquote {
 
 }
 
-
 .service-number {
 
   font-family: 'Bebas Neue', sans-serif;
@@ -1745,20 +1867,17 @@ blockquote {
 
 }
 
-
 .featured .service-number {
 
   color: var(--black);
 
 }
 
-
 .service-icon {
 
   font-size: 35px;
 
 }
-
 
 .service-card h3 {
 
@@ -1774,7 +1893,6 @@ blockquote {
 
 }
 
-
 .service-card p {
 
   max-width: 400px;
@@ -1787,13 +1905,11 @@ blockquote {
 
 }
 
-
 .featured p {
 
   color: var(--black);
 
 }
-
 
 .service-bottom {
 
@@ -1809,13 +1925,11 @@ blockquote {
 
 }
 
-
 .featured .service-bottom {
 
   border-color: rgba(0, 0, 0, 0.4);
 
 }
-
 
 .service-bottom span {
 
@@ -1825,7 +1939,6 @@ blockquote {
 
 }
 
-
 .service-bottom strong {
 
   font-family: 'Roboto Slab', serif;
@@ -1834,9 +1947,8 @@ blockquote {
 
 }
 
-
 /* =========================
-   BOOKING CTA
+   RESERVA FOOTER CTA
 ========================= */
 
 .booking {
@@ -1857,20 +1969,16 @@ blockquote {
 
 }
 
-
 .booking h2 {
 
   margin-bottom: 40px;
-
 }
-
 
 .booking h2 span {
 
   color: var(--black);
 
 }
-
 
 .booking-button.large {
 
@@ -1879,18 +1987,14 @@ blockquote {
   background: var(--black);
 
   border-color: var(--black);
-
 }
-
 
 .booking-button.large:hover {
 
   background: var(--white);
 
   color: var(--black);
-
 }
-
 
 /* =========================
    RESPONSIVE
@@ -1902,35 +2006,30 @@ blockquote {
   .hero {
 
     grid-template-columns: 1fr;
-
   }
 
 
   .hero-video {
 
     min-height: 500px;
-
   }
 
 
   .about {
 
     grid-template-columns: 1fr;
-
   }
 
 
   .about-image {
 
     height: 450px;
-
   }
 
 
   .services-header {
 
     display: block;
-
   }
 
 
@@ -1939,35 +2038,23 @@ blockquote {
     margin-top: 25px;
 
   }
-
 }
 
-
 @media (max-width: 600px) {
-
-
-
-
 
   .menu-button {
 
     width: 35px;
 
     height: 30px;
-
   }
-
 
   .menu-button span {
 
     width: 35px;
 
     height: 4px;
-
   }
-
-
-
 
 
   .booking-button {
@@ -1975,58 +2062,49 @@ blockquote {
     padding: 10px;
 
     font-size: 10px;
-
   }
 
 
   .hero-content {
 
     padding: 70px 25px 40px;
-
   }
 
 
   .hero h1 {
 
     font-size: 48px;
-
   }
 
 
   .hero-location {
 
     font-size: 15px;
-
   }
 
 
   .about,
-
   .services {
 
     padding: 80px 25px;
-
   }
 
 
   .about-image {
 
     height: 350px;
-
   }
 
 
   .about-stamp {
 
     right: -15px;
-
   }
 
 
   .services-grid {
 
     grid-template-columns: 1fr;
-
   }
 
 
@@ -2036,11 +2114,6 @@ blockquote {
 
   }
 
-
   .booking h2 {
-
     font-size: 48px;
-
-  }
-
-}
+  }}
