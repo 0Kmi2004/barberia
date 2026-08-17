@@ -302,16 +302,30 @@ text-align: center;
     min-height: 80px;
 
 
-    padding: 1em 2em 1em;
+    padding: 0 2em 0;
 }
 
 .steps-container {
-    display: flex;
+  display: flex;
     justify-content: center;
     width: 100%;
-
+    padding-top: 1em;
     margin: 0;
 }
+
+
+#stepper.hidden {
+    display: none;
+}
+
+#confirmation.hidden {
+    display: none;
+}
+
+#confirmation-two.hidden {
+    display: none;
+}
+
 
 .steps {
 
@@ -470,7 +484,7 @@ text-align: center;
 
 .modal-header-title h3 {
 
-    margin: 0;
+    margin-top: .5em;
 
     color: #fff;
 
@@ -796,7 +810,7 @@ text-align: center;
     position: relative;
     width: max-content;
     min-height: 48px;
-    padding: 1em 4em;
+    padding: 1em clamp(3em, 4em, 4em);
     border: none;
     border-radius: 8px;
     background:
@@ -872,7 +886,8 @@ text-align: center;
       color: white;
       font-weight: 500;
       border: 1px solid rgb(104, 104, 104);
-          padding: 1em 2.5em;
+          padding: 1em clamp(2em, 2em, 2.5em);
+          text-wrap: nowrap;
 }
 
 @media (max-width: 500px) {
@@ -1091,13 +1106,6 @@ text-align: center;
   cursor: default;
 }
 
-.calendar-day.selected {
-
-}
-
-.calendar-day.selected:hover {
-
-}
 
 /* =========================
    MODAL 3
@@ -1332,6 +1340,395 @@ text-align: center;
 
     border-color: #6d9b68;
 }
+
+/* =================================
+   MODAL 5 Y 6
+================================= */
+
+.confirmation-page{
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.confirmation-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.confirmation-header h3 {
+
+    font-size: 26px;
+    color: #fff;
+
+}
+
+.confirmation-header p {
+    margin: 0;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.confirmation-card {
+    width: 100%;
+
+    background: #171717;
+
+    border: 1px solid #393939;
+    border-radius: 14px;
+
+    overflow: hidden;
+}
+
+.confirmation-list{
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+
+}
+
+.confirmation-card.user{
+  display: flex;
+  gap: .5em;
+
+}
+
+.confirmation-list.user{
+  padding: 1em 1em 1em .7em;
+  width: 100%;
+}
+
+.confirmation-line{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 1.5em;
+
+}
+
+.icon-tainer svg {
+  color: #cbb288;
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.confirmation-line p{
+  font-size: clamp(9px, 13px, 15px);
+  padding: 3px 0;
+}
+
+.name-after {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  flex: 1;
+}
+
+.name-after::after {
+    content: "";
+
+    flex: 1;
+
+    border-bottom: 2px dotted #666;
+
+    margin: 0 10px;
+}
+
+.conf-line-category{
+  display: flex;
+  align-items: center;
+
+      white-space: nowrap;
+
+    flex: 1;
+}
+
+.conf-line-category-two{
+  display: flex;
+  align-items: center;
+}
+
+.conf-line-category::after {
+    content: "";
+
+    flex: 1;
+
+    border-bottom: 2px dotted #666;
+
+    margin: 0 10px;
+}
+
+.conf-line-category img{
+  color:rgba(226, 12, 12, 0.75);
+}
+
+.icon-tainer{
+  width: 25.5px;
+  height: 26.5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: .4em;
+}
+
+.reloj-padding{
+  padding: 2px;
+}
+
+.precio-padding{
+  padding: 1px;
+}
+
+.conf-user-div{
+  display: flex;
+  height: 100%;
+  margin-top: 1.4em;
+  margin-left: 1em;
+  padding: .3em;
+  background-color: #333333;
+  border-radius: 50%;
+
+}
+
+.conf-user-div svg{
+  color: #cbb288;
+  stroke-width: 2;
+}
+
+.confirmation-text{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  color: #d4d4d4;
+  font-weight: 400;
+  padding: 1.5em 0;
+  gap: .6em;
+}
+
+.confirmation-text h3{
+  font-size: 18px;
+    font-weight: 500;
+      color: #ffffff;
+}
+
+.confirmation-text h4{
+  font-size: 15px;
+    font-weight: 400;
+      color: #d4d4d4;
+}
+
+/* ILUSTRACION RESERVA */
+
+.conf-two-header{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+}
+
+.conf-two-header{
+  
+    color: #fff;
+
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: .5em;
+
+    letter-spacing: -.02em;
+}
+
+.conf-titles{
+      margin: 0;
+
+    color: #ffffff;
+
+    font-size: 1.5rem;
+    font-weight: 400;
+
+    letter-spacing: -.02em;
+}
+
+.confirmation-illustration {
+    position: relative;
+    width: 130px;
+    height: 110px;
+
+    margin: 0 auto 5px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.success-circle {
+    width: 62px;
+    height: 62px;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+        145deg,
+        #dcae4d,
+        #b98222
+    );
+
+    border: 2px solid #f0c86c;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow:
+        0 0 0 3px rgba(218, 169, 72, 0.12),
+        0 8px 20px rgba(0, 0, 0, 0.3);
+
+    position: relative;
+    z-index: 2;
+
+    animation: successPop 0.5s ease-out;
+}
+
+.success-circle svg {
+    width: 34px;
+    height: 34px;
+
+    stroke: white;
+    stroke-width: 3;
+
+    animation: checkDraw 0.4s ease-out 0.25s both;
+}
+
+.confetti {
+    position: absolute;
+    inset: 0;
+}
+
+.confetti span {
+    position: absolute;
+
+    width: 5px;
+    height: 8px;
+
+    background: #c9942e;
+
+    border-radius: 1px;
+
+    animation: confettiFloat 2s ease-out forwards;
+}
+
+.confetti span:nth-child(1) {
+    left: 20px;
+    top: 38px;
+    transform: rotate(35deg);
+}
+
+.confetti span:nth-child(2) {
+    left: 34px;
+    top: 18px;
+    transform: rotate(-45deg);
+}
+
+.confetti span:nth-child(3) {
+    left: 48px;
+    top: 31px;
+    transform: rotate(60deg);
+}
+
+.confetti span:nth-child(4) {
+    left: 65px;
+    top: 8px;
+    transform: rotate(-30deg);
+}
+
+.confetti span:nth-child(5) {
+    right: 40px;
+    top: 25px;
+    transform: rotate(45deg);
+}
+
+.confetti span:nth-child(6) {
+    right: 22px;
+    top: 42px;
+    transform: rotate(-45deg);
+}
+
+.confetti span:nth-child(7) {
+    right: 32px;
+    top: 12px;
+    transform: rotate(30deg);
+}
+
+.confetti span:nth-child(8) {
+    left: 10px;
+    top: 58px;
+    transform: rotate(-35deg);
+}
+
+.confetti span:nth-child(9) {
+    right: 10px;
+    top: 58px;
+    transform: rotate(55deg);
+}
+
+.confetti span:nth-child(10) {
+    left: 76px;
+    top: 42px;
+    transform: rotate(-20deg);
+}
+
+
+/* ANIMACIONES */
+
+@keyframes successPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+@keyframes checkDraw {
+    from {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+@keyframes confettiFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) rotate(0deg);
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-8px) rotate(90deg);
+    }
+}
+
 
 /* =========================
    BOTÓN FLOTANTE

@@ -364,19 +364,47 @@
     
     <!-- =========================
            MODALES
-      ========================== -->
-  <div class="modal" id="modalReserva">
+    ========================== -->
+
+    <div class="modal" id="modalReserva">
     <div class="modal-container">
 
       <div class="modal-header">
-        <div class="steps-container">
+        <div class="steps-container shown" id="stepper">
           <div class="steps">
             <div class="step active">1</div>
             <div class="step">2</div>
             <div class="step">3</div>
             <div class="step">4</div>
+
           </div>
         </div>
+        <div class="steps-container hidden" id="confirmation">
+          <h3 class="conf-titles">Confirmá tu turno</h3>
+        </div>
+        <div class="steps-container hidden" id="confirmation-two">
+          <div class="conf-two-header">
+            <div class="confirmation-illustration">
+              <div class="confetti">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="success-circle">
+                <i data-lucide="check"></i>
+              </div>
+            </div>
+            <h3 >¡Reserva realizada!</h3>
+          </div>
+        </div>
+
         <button id="btnCerrar" class="btn-cerrar">&times;</button>
       </div>
 
@@ -448,7 +476,6 @@
         </section>
   
         <!-- MODAL 2 -->
-  
         <section class="step-content" data-step="2">
   
           <div class="modal-header-title">
@@ -635,10 +662,184 @@
             </button>
           </div>
         </section>
+
+        <!-- MODAL 5 -->
+        <section class="step-content" data-step="5">
+          <div class="confirmation-header">
+            <p>
+              Revisá los datos antes de confirmar.
+            </p>
+          </div>
+
+          <div class="confirmation-page">
+
+            <div class="confirmation-card">
+              <div class="confirmation-list">
+
+                <div class="confirmation-line">
+                  <div class="conf-line-category">
+                    <div class="icon-tainer">
+                      <i data-lucide="scissors"></i>
+                    </div>
+                    
+                    <p>Servicio</p>
+                  </div>
+                  <p>Corte + Barba</p>
+                </div>
+        
+                <div class="confirmation-line">
+                  <div class="conf-line-category">
+                    <div class="icon-tainer">
+                      <i data-lucide="calendar"></i>
+                    </div>
+                    
+                    <p>Fecha</p>
+                  </div>
+                  <p>Viernes 30 de julio</p>
+                </div>
+        
+                <div class="confirmation-line">
+                  <div class="conf-line-category">
+                    <div class="icon-tainer">
+                      <i data-lucide="clock"></i>
+                    </div>
+                    
+                    <p>Hora</p>
+                  </div>
+                  <p>10:30</p>
+                </div>
+        
+                <div class="confirmation-line">
+                  <div class="conf-line-category">
+                    <div class="icon-tainer">
+                      <i data-lucide="circle-dollar-sign"></i>
+                    </div>
+                    
+                    <p>Precio</p>
+                  </div>
+                  <p>20.000</p>
+                </div>
+              </div>
+            </div>
+        
+            <div class="confirmation-card user">
+              <div class="conf-user-div">
+                <i data-lucide="user"></i>
+              </div>
+        
+              <div class="confirmation-list user">
+        
+                <div class="confirmation-line">
+                  <p class="name-after">Nombre</p>
+                  <P>Camilo Marquez</P>
+                </div>
+        
+                <div class="confirmation-line">
+                  <p class="name-after">Teléfono</p>
+                  <P>1132027488</P>
+                </div>
+        
+                <div class="confirmation-line">
+                  <p class="name-after">Email</p>
+                  <P>marquezcamilo1134@gmail.com</P>
+                </div>
+        
+                <div class="confirmation-line">
+                  <p class="name-after">Observaciones</p>
+                  <P>Sin observaciones</P>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-button-footer">
+            <button type="button" class="modal-button secondary" id="btnAnterior5">
+              Atrás
+            </button>
+            <button type="button" class="modal-button" id="btnSiguiente5">
+              Confirmar
+            </button>
+          </div>
+
+        </section>
+
+        <!-- MODAL 6 -->
+        <section class="step-content" data-step="6">
+          
+
+          <div class="confirmation-header">
+            <p>
+              Tu turno fue registrado correctamente.
+            </p>
+          </div>
+
+          <div class="confirmation-card">
+            <div class="confirmation-list">
+
+              <div class="confirmation-line">
+                  <div class="conf-line-category-two">
+                    <div class="icon-tainer">
+                      <i data-lucide="scissors"></i>
+                    </div>
+                    
+                    <p>Servicio</p>
+                  </div>
+                  <p>Corte + Barba</p>
+              </div>
+        
+              <div class="confirmation-line">
+                  <div class="conf-line-category-two">
+                    <div class="icon-tainer">
+                      <i data-lucide="calendar"></i>
+                    </div>
+                    
+                    <p>Fecha</p>
+                  </div>
+                  <p>Viernes 30 de julio</p>
+              </div>
+        
+              <div class="confirmation-line">
+                  <div class="conf-line-category-two">
+                    <div class="icon-tainer">
+                      <i data-lucide="clock"></i>
+                    </div>
+                    
+                    <p>Hora</p>
+                  </div>
+                  <p>10:30</p>
+              </div>
+        
+              <div class="confirmation-line">
+                  <div class="conf-line-category-two">
+                    <div class="icon-tainer">
+                      <i data-lucide="circle-dollar-sign"></i>
+                    </div>
+                    
+                    <p>Precio</p>
+                  </div>
+                  <p>20.000</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="confirmation-text">
+            <h3>Te esperamos en la barberia</h3>
+            <h4>Si necesitas cancelar o reprogramar, contactános.</h4>
+          </div>
+
+          <div class="modal-button-footer">
+            <button type="button" class="modal-button secondary" id="btnAnterior6">
+              Volver al inicio
+            </button>
+            <button type="button" class="modal-button" id="descargar">
+              Descargar
+            </button>
+          </div>
+         </section>
       </div>
     </div>
   </div>
 </body>
-
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="script.js"></script>
 </html>
