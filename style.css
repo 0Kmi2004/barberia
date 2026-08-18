@@ -193,7 +193,7 @@ button {
   padding: 15px 22px;
 
   border: 1px solid var(--white);
-
+  cursor: pointer;
   color: var(--white);
 
   font-family: 'Roboto Slab', serif;
@@ -243,6 +243,8 @@ text-align: center;
     z-index: 9999;
 
     overflow-y: auto;
+             ::-webkit-scrollbar {
+    display: none;}
 }
 
 .modal.active {
@@ -450,6 +452,7 @@ text-align: center;
 
 .wizard {
     width: 100%;
+
 }
 
 /* =========================
@@ -459,6 +462,8 @@ text-align: center;
 .step-content {
 
     display: none;
+
+  
 }
 
 .step-content.active {
@@ -1789,7 +1794,12 @@ text-align: center;
 
   justify-content: center;
 
-  background: var(--red);
+
+    background: linear-gradient(
+    to left,
+    #ed2b22,
+    #b42119
+  );
 
   overflow: hidden;
 
@@ -1860,6 +1870,8 @@ text-align: center;
 .hero h1 strong {
 
   color: var(--black);
+  font-style: oblique ;
+
 
 }
 
@@ -2367,9 +2379,16 @@ blockquote {
 
 }
 
+.booking-content{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
+}
+
 .booking h2 {
 
-  margin-bottom: 40px;
+  margin-bottom: .3em;
 }
 
 .booking h2 span {
@@ -2381,10 +2400,11 @@ blockquote {
 .booking-button.large {
 
   display: inline-block;
-
+margin-top: 1.5em;
   background: var(--black);
-
+  cursor: pointer;
   border-color: var(--black);
+  width: max-content;
 }
 
 .booking-button.large:hover {
