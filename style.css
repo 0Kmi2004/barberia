@@ -1089,6 +1089,10 @@ text-align: center;
     transition: all .2s;
 }
 
+.calendar-day.selected {
+
+}
+
 .calendar-day:hover {
     background: #eee;
     color: #000000;
@@ -1121,6 +1125,7 @@ text-align: center;
     grid-template-columns: repeat(3, 1fr);
     gap: 7px;
     padding: .5em;
+
 }
 
 .horario{
@@ -1142,6 +1147,31 @@ text-align: center;
   background-color: #f47700;
   scale: 1.03;
   color: #000;
+}
+
+.time-option {
+  background-color: #300d0d;
+  color: white;
+  border-radius: 10px;
+  font-size: 18px;
+  padding: 1em 0em;
+
+  border: none;
+  cursor: pointer;
+}
+
+.time-option:hover{
+  background-color: #421212;
+  scale: 1.01;
+}
+
+
+.time-option:focus {
+    border-color: #e09f11;
+    background: #ececec;
+    color: #300d0d;
+    font-weight: 600;
+    scale: 1.01;
 }
 
 /* =================================

@@ -364,7 +364,7 @@
                     <strong>$15.000</strong>
                   </div>
                   <label class="card-radio">
-                    <input type="radio" name="service" id="corte">
+                    <input type="radio" name="service" id="corte" value="1">
                     <span class="radio-check">
                       <img src="assets/check.png" alt="">
                     </span>
@@ -380,7 +380,7 @@
                     <strong>$8.000</strong>
                   </div>
                   <label class="card-radio">
-                    <input type="radio" name="service" id="barba">
+                    <input type="radio" name="service" id="barba" value="2">
                     <span class="radio-check">
                       <img src="assets/check.png" alt="">
                     </span>
@@ -396,7 +396,7 @@
                     <strong>$20.000</strong>
                   </div>
                   <label class="card-radio">
-                    <input type="radio" name="service" id="cortebarba">
+                    <input type="radio" name="service" id="cortebarba" value="3">
                     <span class="radio-check">
                       <img src="assets/check.png" alt="">
                     </span>
@@ -424,11 +424,11 @@
               <div class="calendar">
     
                 <div class="calendar-header">
-                  <button type="button" class="calendar-nav">‹</button>
+                  <button type="button" class="calendar-nav" id="btnMesAnterior">‹</button>
     
-                  <h4>Agosto 2026</h4>
+                  <h4 id="calendarTitle">Septiembre 2026</h4>
     
-                  <button type="button" class="calendar-nav">›</button>
+                  <button type="button" class="calendar-nav" id="btnMesSiguiente">›</button>
                 </div>
     
                 <div class="calendar-weekdays">
@@ -443,41 +443,41 @@
                 <div class="calendar-days">
     
                   <!-- Días del mes anterior -->
-                  <button type="button" class="calendar-day other-month">26</button>
-                  <button type="button" class="calendar-day other-month">27</button>
-                  <button type="button" class="calendar-day other-month">28</button>
-                  <button type="button" class="calendar-day other-month">29</button>
-                  <button type="button" class="calendar-day other-month">30</button>
-                  <button type="button" class="calendar-day other-month">31</button>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
     
-                  <!-- Agosto -->
-                  <button type="button" class="calendar-day">1</button>
-                  <button type="button" class="calendar-day">2</button>
-                  <button type="button" class="calendar-day">3</button>
-                  <button type="button" class="calendar-day">4</button>
-                  <button type="button" class="calendar-day">5</button>
-                  <button type="button" class="calendar-day">6</button>
-    
-                  <button type="button" class="calendar-day">7</button>
-                  <button type="button" class="calendar-day">8</button>
-                  <button type="button" class="calendar-day">9</button>
-                  <button type="button" class="calendar-day">10</button>
-                  <button type="button" class="calendar-day">11</button>
-                  <button type="button" class="calendar-day">12</button>
-    
-                  <button type="button" class="calendar-day">13</button>
-                  <button type="button" class="calendar-day">14</button>
-                  <button type="button" class="calendar-day">15</button>
-                  <button type="button" class="calendar-day">16</button>
-                  <button type="button" class="calendar-day">17</button>
-                  <button type="button" class="calendar-day">18</button>
-    
-                  <button type="button" class="calendar-day">19</button>
-                  <button type="button" class="calendar-day">20</button>
-                  <button type="button" class="calendar-day">21</button>
-                  <button type="button" class="calendar-day">22</button>
-                  <button type="button" class="calendar-day">23</button>
-                  <button type="button" class="calendar-day">24</button>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  <div class="calendar-days" id="calendarDays"></div>
+                  
                 </div>
               </div>
             </div>
@@ -499,26 +499,26 @@
               <h3>Reservá un horario</h3>
               <h4>Viernes, 13 de agosto</h4>
             </div>
-            <div class="horarios">
-              <button type="button" class="horario">9:00</button>
-              <button type="button" class="horario">9:45</button>
-              <button type="button" class="horario">10:30</button>
+            <div class="horarios" id="timeGrid">
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
     
-              <button type="button" class="horario">11:15</button>
-              <button type="button" class="horario">12:00</button>
-              <button type="button" class="horario">12:45</button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
     
-              <button type="button" class="horario">13:30</button>
-              <button type="button" class="horario">14:15</button>
-              <button type="button" class="horario">15:00</button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
     
-              <button type="button" class="horario">15:45</button>
-              <button type="button" class="horario">16:30</button>
-              <button type="button" class="horario">17:15</button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
     
-              <button type="button" class="horario">18:00</button>
-              <button type="button" class="horario">18:45</button>
-              <button type="button" class="horario">19:30</button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
+              <button type="button" class="horario"></button>
             </div>
     
             <div class="modal-button-footer">
