@@ -1,7 +1,9 @@
 lucide.createIcons();
 
+/* =================================
+   MODALES - variables
+================================= */
 const modal = document.getElementById("modalReserva");
-
 const abrir = document.getElementById("btnReservar");
 const abrir2 = document.getElementById("btnReservar2");
 const cerrar = document.getElementById("btnCerrar");
@@ -10,6 +12,7 @@ const cerrar2 = document.getElementById("btnAnterior6");
 const stepper = document.getElementById("stepper");
 const confirmHeader = document.getElementById("confirmation");
 const confirmTwoHeader = document.getElementById("confirmation-two");
+const steps = document.querySelectorAll(".step");
 
 const paso1 = document.querySelector('.step-content[data-step="1"]');
 const paso2 = document.querySelector('.step-content[data-step="2"]');
@@ -18,38 +21,10 @@ const paso4 = document.querySelector('.step-content[data-step="4"]');
 const paso5 = document.querySelector('.step-content[data-step="5"]');
 const paso6 = document.querySelector('.step-content[data-step="6"]');
 
-const steps = document.querySelectorAll(".step");
-
-const serviceCards = document.querySelectorAll(".modal-service-card");
-
-
-const calendarDaysContainer = document.getElementById("calendarDays");
-const calendarTitle = document.getElementById("calendarTitle");
-const btnMesAnterior = document.getElementById("btnMesAnterior");
-const btnMesSiguiente = document.getElementById("btnMesSiguiente");
-
-let mesActual = 7; // Agosto = 7
-let anioActual = 2026;
-
-const mesMinimo = 7; // Agosto
-const mesMaximo = 11; // Diciembre
-
-
-const btnSiguiente1 = document.getElementById("btnSiguiente1");
-const btnAtras2 = document.getElementById("btnAnterior2");
-const btnSiguiente2 = document.getElementById("btnSiguiente2");
-const btnAtras3 = document.getElementById("btnAnterior3");
-const btnSiguiente3 = document.getElementById("btnSiguiente3");
-const btnAtras4 = document.getElementById("btnAnterior4");
-const btnSiguiente4 = document.getElementById("btnSiguiente4");
-const btnAnterior5 = document.getElementById("btnAnterior5");
-const btnSiguiente5 = document.getElementById("btnSiguiente5");
-
-const timeGrid = document.getElementById("timeGrid");
-
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
 let servicioSeleccionado = null;
+let servicioNombre = null; // Guardará el texto para el Paso 5
 
 function resetWizard() {
 
@@ -91,16 +66,19 @@ function resetWizard() {
         timeGrid.innerHTML = "";
     }
 }
-
 function abrirModal() {
+    // Solo resetea la primera vez que abre desde cero
+    if (!modal.classList.contains("active")) {
+        resetWizard();
+    }
+    
     modal.classList.add("active");
-    stepper.classList.remove("hidden");
     confirmHeader.classList.add("hidden");
     confirmTwoHeader.classList.add("hidden");
-    
-    resetWizard();
 }
-
+/* =================================
+   modales - clciks
+================================= */
 abrir.addEventListener("click", abrirModal);
 abrir2.addEventListener("click", abrirModal);
 cerrar.addEventListener("click", () => {
@@ -119,272 +97,26 @@ cerrar2.addEventListener("click", () => {
 
     resetWizard();
 });
+modal.addEventListener("click", (e) => {
 
-modal.addEventListener("click",(e)=>{
-
-    if(e.target===modal){
+    if (e.target === modal) {
 
         modal.classList.remove("active");
+
+        stepper.classList.remove("hidden");
+        confirmHeader.classList.add("hidden");
+        confirmTwoHeader.classList.add("hidden");
+
         resetWizard();
     }
 
 });
 
 
-function generarCalendario() {
-
-    calendarDaysContainer.innerHTML = "";
-
-    const primerDia = new Date(anioActual, mesActual, 1);
-    const ultimoDia = new Date(anioActual, mesActual + 1, 0);
-    const cantidadDias = ultimoDia.getDate();
-
-    let primerDiaSemana = primerDia.getDay();
-
-    primerDiaSemana = primerDiaSemana === 0 ? 6 : primerDiaSemana - 1;
-
-    const ultimoDiaMesAnterior = new Date(
-        anioActual,
-        mesActual,
-        0
-    ).getDate();
-
-    for (let i = primerDiaSemana - 1; i >= 0; i--) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.classList.add(
-            "calendar-day",
-            "other-month"
-        );
-        button.textContent = ultimoDiaMesAnterior - i;
-        calendarDaysContainer.appendChild(button);
-    }
-
-    for (let dia = 1; dia <= cantidadDias; dia++) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.classList.add("calendar-day");
-        button.textContent = dia;
-        const mesFormateado = String(mesActual + 1).padStart(2, "0");
-        const diaFormateado = String(dia).padStart(2, "0");
-        button.dataset.fecha =
-            `${anioActual}-${mesFormateado}-${diaFormateado}`;
-        if (button.dataset.fecha === fechaSeleccionada) {
-            button.classList.add("selected");
-        }
-        calendarDaysContainer.appendChild(button);
-    }
-
-    actualizarTituloCalendario();
-    controlarBotonesMes();
-    agregarEventosDias();
-}
-
-function actualizarTituloCalendario() {
-
-    const fecha = new Date(anioActual, mesActual);
-
-    const nombreMes = fecha.toLocaleDateString("es-AR", {
-        month: "long"
-    });
-
-    const nombreMesCapitalizado =
-        nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
-
-    calendarTitle.textContent =
-        `${nombreMesCapitalizado} ${anioActual}`;
-}
-btnMesSiguiente.addEventListener("click", () => {
-
-    if (mesActual < mesMaximo) {
-
-        mesActual++;
-
-        generarCalendario();
-
-    }
-
-});
-btnMesAnterior.addEventListener("click", () => {
-
-    if (mesActual > mesMinimo) {
-
-        mesActual--;
-
-        generarCalendario();
-
-    }
-
-});
-function controlarBotonesMes() {
-
-    btnMesAnterior.disabled =
-        mesActual === mesMinimo;
-
-    btnMesSiguiente.disabled =
-        mesActual === mesMaximo;
-}
-function agregarEventosDias() {
-
-    const calendarDays =
-        document.querySelectorAll(".calendar-day");
-    calendarDays.forEach(day => {
-        day.addEventListener("click", async () => {
-            if (day.classList.contains("other-month")) {
-                return;
-            }
-            calendarDays.forEach(d => {
-                d.classList.remove("selected");
-            });
-            day.classList.add("selected");
-            fechaSeleccionada =
-                day.dataset.fecha;
-            console.log(
-                "Fecha seleccionada:",
-                fechaSeleccionada
-            );
-            await cargarHorarios(fechaSeleccionada);
-        });
-    });
-}
-
-generarCalendario();
-
-
-btnSiguiente1.addEventListener("click", () => {
-
-    paso1.classList.remove("active");
-
-    paso2.classList.add("active");
-
-    steps[0].classList.remove("active");
-    steps[1].classList.add("active");
-
-});
-btnAtras2.addEventListener("click", () => {
-
-    paso2.classList.remove("active");
-    paso1.classList.add("active");
-
-    steps[1].classList.remove("active");
-    steps[0].classList.add("active");
-
-    restaurarServicioSeleccionado();
-
-});
-btnSiguiente2.addEventListener("click", () => {
-
-    if (!fechaSeleccionada) {
-        alert("Seleccioná una fecha.");
-        return;
-    }
-
-    paso2.classList.remove("active");
-
-    paso3.classList.add("active");
-
-    steps[1].classList.remove("active");
-    steps[2].classList.add("active");
-
-});
-btnAtras3.addEventListener("click", () => {
-
-    paso3.classList.remove("active");
-
-    paso2.classList.add("active");
-
-    steps[2].classList.remove("active");
-    steps[1].classList.add("active");
-});
-btnSiguiente3.addEventListener("click", () => {
-
-    if (!horaSeleccionada) {
-        alert("Seleccioná un horario.");
-        return;
-    }
-
-    paso3.classList.remove("active");
-
-    paso4.classList.add("active");
-
-    steps[2].classList.remove("active");
-    steps[3].classList.add("active");
-
-});
-btnAnterior4.addEventListener("click", () => {
-
-    paso4.classList.remove("active");
-
-    paso3.classList.add("active");
-
-    steps[3].classList.remove("active");
-    steps[2].classList.add("active");
-
-});
-btnSiguiente4.addEventListener("click", () => {
-
-    paso4.classList.remove("active");
-
-    paso5.classList.add("active");
-
-    steps[3].classList.remove("active");
-
-    stepper.classList.add("hidden");
-
-    confirmHeader.classList.remove("hidden");
-
-});
-btnAnterior5.addEventListener("click", () => {
-
-    paso5.classList.remove("active");
-
-    paso4.classList.add("active");
-
-    steps[3].classList.add("active");
-
-    stepper.classList.remove("hidden");
-
-    confirmHeader.classList.add("hidden");
-
-});
-btnSiguiente5.addEventListener("click", () => {
-
-    paso5.classList.remove("active");
-
-    paso6.classList.add("active");
-
-    confirmHeader.classList.add("hidden");
-
-    confirmTwoHeader.classList.remove("hidden");
-});
-
-serviceCards.forEach(card => {
-
-    card.addEventListener("click", () => {
-
-        const radio = card.querySelector('input[type="radio"]');
-
-        // Seleccionar radio
-        radio.checked = true;
-
-        // Guardar servicio seleccionado
-        servicioSeleccionado = radio.value;
-
-        // Quitar selección visual anterior
-        serviceCards.forEach(c => {
-            c.classList.remove("selected");
-        });
-
-        // Marcar tarjeta actual
-        card.classList.add("selected");
-
-        console.log("Servicio seleccionado:", servicioSeleccionado);
-
-    });
-
-});
-
-
+/* =================================
+   SERVICIO - variables
+================================= */
+const serviceCards = document.querySelectorAll(".modal-service-card");
 function restaurarServicioSeleccionado() {
 
     if (!servicioSeleccionado) {
@@ -410,46 +142,227 @@ function restaurarServicioSeleccionado() {
     });
 
 }
+/* =================================
+   servicio - clicks
+================================= */
+serviceCards.forEach(card => {
+    card.addEventListener("click", () => {
+        const radio = card.querySelector('input[type="radio"]');
+
+        // Seleccionar radio
+        radio.checked = true;
+
+        // 1. Guardar el ID para la API/Backend
+        servicioSeleccionado = radio.value;
+
+        // 2. Guardar el NOMBRE para el resumen (Paso 5)
+        // Busca la etiqueta del nombre o el texto dentro del card
+        const elementoNombre = card.querySelector(".service-title") || card.querySelector("h4") || card.querySelector("label");
+        servicioNombre = elementoNombre ? elementoNombre.textContent.trim() : `Servicio #${radio.value}`;
+
+        serviceCards.forEach(c => {
+            c.classList.remove("selected");
+        });
+
+        // Marcar tarjeta actual
+        card.classList.add("selected");
+
+        console.log("ID Servicio:", servicioSeleccionado);
+        console.log("Nombre Servicio:", servicioNombre);
+    });
+});
 
 
+/* =================================
+   CALENDARIO - variables
+================================= */
+const calendarDaysContainer = document.getElementById("calendarDays");
+const calendarTitle = document.getElementById("calendarTitle");
+const btnMesAnterior = document.getElementById("btnMesAnterior");
+const btnMesSiguiente = document.getElementById("btnMesSiguiente");
+const mesMinimo = 7; // Agosto
+const mesMaximo = 11; // Diciembre
+let mesActual = 7; // Agosto = 7
+let anioActual = 2026;
+
+function generarCalendario() {
+    calendarDaysContainer.innerHTML = "";
+
+    const primerDia = new Date(anioActual, mesActual, 1);
+    const ultimoDia = new Date(anioActual, mesActual + 1, 0);
+    const cantidadDias = ultimoDia.getDate();
+
+    let diaSemanaInicio = primerDia.getDay();
+    let offset = diaSemanaInicio === 0 ? 0 : diaSemanaInicio - 1;
+
+    // Rellenar días anteriores
+    const ultimoDiaMesAnterior = new Date(anioActual, mesActual, 0).getDate();
+    let diasAgregados = 0;
+    let diaMesAnterior = ultimoDiaMesAnterior;
+    const botonesAnteriores = [];
+
+    while (diasAgregados < offset) {
+        const fechaPrev = new Date(anioActual, mesActual - 1, diaMesAnterior);
+        if (fechaPrev.getDay() !== 0) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.classList.add("calendar-day", "other-month");
+            button.textContent = diaMesAnterior;
+            botonesAnteriores.unshift(button);
+            diasAgregados++;
+        }
+        diaMesAnterior--;
+    }
+    botonesAnteriores.forEach(btn => calendarDaysContainer.appendChild(btn));
+
+    // Renderizar días del mes actual
+    for (let dia = 1; dia <= cantidadDias; dia++) {
+        const fechaObj = new Date(anioActual, mesActual, dia);
+
+        if (fechaObj.getDay() === 0) continue; // Saltear domingo
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.classList.add("calendar-day");
+        button.textContent = dia;
+
+        const mesFormateado = String(mesActual + 1).padStart(2, "0");
+        const diaFormateado = String(dia).padStart(2, "0");
+        const fechaString = `${anioActual}-${mesFormateado}-${diaFormateado}`;
+
+        button.dataset.fecha = fechaString;
+
+        // VERIFICACIÓN DE SELECCIÓN PREVIA
+        if (fechaSeleccionada && fechaSeleccionada === fechaString) {
+            button.classList.add("selected");
+        }
+
+        calendarDaysContainer.appendChild(button);
+    }
+
+    actualizarTituloCalendario();
+    controlarBotonesMes();
+    agregarEventosDias();
+}
+function actualizarTituloCalendario() {
+
+    const fecha = new Date(anioActual, mesActual);
+
+    const nombreMes = fecha.toLocaleDateString("es-AR", {
+        month: "long"
+    });
+
+    const nombreMesCapitalizado =
+        nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+
+    calendarTitle.textContent =
+        `${nombreMesCapitalizado} ${anioActual}`;
+}
+function controlarBotonesMes() {
+
+    btnMesAnterior.disabled =
+        mesActual === mesMinimo;
+
+    btnMesSiguiente.disabled =
+        mesActual === mesMaximo;
+}
+function agregarEventosDias() {
+    const calendarDays = calendarDaysContainer.querySelectorAll(".calendar-day:not(.other-month)");
+
+    calendarDays.forEach(day => {
+        day.addEventListener("click", async () => {
+            calendarDaysContainer.querySelectorAll(".calendar-day").forEach(d => {
+                d.classList.remove("selected");
+            });
+
+            day.classList.add("selected");
+
+            fechaSeleccionada = day.dataset.fecha;
+
+            console.log("Fecha guardada correctamente:", fechaSeleccionada);
+
+            await cargarHorarios(fechaSeleccionada);
+        });
+    });
+}
+function marcarFechaSeleccionada() {
+    if (!fechaSeleccionada) return;
+
+    // Buscar el botón que tenga el atributo data-fecha idéntico a fechaSeleccionada
+    const botonGuardado = calendarDaysContainer.querySelector(
+        `.calendar-day[data-fecha="${fechaSeleccionada}"]`
+    );
+
+    if (botonGuardado) {
+        // Quitar previas selecciones
+        calendarDaysContainer.querySelectorAll(".calendar-day").forEach(b => {
+            b.classList.remove("selected");
+        });
+
+        // Marcar el botón encontrado
+        botonGuardado.classList.add("selected");
+    }
+}
+/* =================================
+   calendarios - clicks
+================================= */
+btnMesSiguiente.addEventListener("click", () => {
+
+    if (mesActual < mesMaximo) {
+
+        mesActual++;
+
+        generarCalendario();
+
+    }
+
+});
+btnMesAnterior.addEventListener("click", () => {
+
+    if (mesActual > mesMinimo) {
+
+        mesActual--;
+
+        generarCalendario();
+
+    }
+
+});
+generarCalendario();
+
+
+/* =================================
+   HORARIOS - variables
+================================= */
+const timeGrid = document.getElementById("timeGrid");
+const selectedDateHeader = document.getElementById("textoFechaElegida");
 async function cargarHorarios(fecha) {
 
     try {
-
         const respuesta = await fetch(
             `http://localhost:3000/api/disponibilidad/${fecha}`
         );
-
         if (!respuesta.ok) {
             throw new Error("No se pudo obtener la disponibilidad");
         }
-
         const horarios = await respuesta.json();
-
         console.log("Horarios disponibles:", horarios);
-
         timeGrid.innerHTML = "";
-
         horarios.forEach(hora => {
-
             const button = document.createElement("button");
-
             button.type = "button";
             button.classList.add("time-option");
             button.textContent = hora;
-
+            if (horaSeleccionada && hora === horaSeleccionada) {
+                button.classList.add("selected");
+            }
             button.addEventListener("click", () => {
-
                 document.querySelectorAll(".time-option").forEach(b => {
                     b.classList.remove("selected");
                 });
-
                 button.classList.add("selected");
-
                 horaSeleccionada = hora;
-
                 console.log("Hora seleccionada:", horaSeleccionada);
-
     });
 
    timeGrid.appendChild(button);
@@ -463,3 +376,302 @@ async function cargarHorarios(fecha) {
     }
 
 }
+function actualizarTextoFechaPaso3() {
+    if (!fechaSeleccionada || !selectedDateHeader) return;
+
+    const [anio, mes, dia] = fechaSeleccionada.split("-").map(Number);
+    const fechaObj = new Date(anio, mes - 1, dia);
+
+    const fechaTexto = fechaObj.toLocaleDateString("es-AR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    });
+
+    const fechaCapitalizada = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+
+    selectedDateHeader.textContent = fechaCapitalizada;
+}
+
+
+/* =================================
+   FORMULARIO - variables
+================================= */
+const btnConfirmarReserva = document.getElementById("btnConfirmarReserva");
+let datosCliente = {
+    nombre: "",
+    email: "",
+    telefono: "",
+    notas: ""
+};
+const inputNombre = document.getElementById("nombre");
+const inputEmail = document.getElementById("email");
+const inputTelefono = document.getElementById("telefono");
+const inputNotas = document.getElementById("notas");
+
+function validarFormulario() {
+    const nombreValido = inputNombre.value.trim() !== "";
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail.value.trim());
+    const telefonoValido = inputTelefono.value.trim().length >= 8;
+
+    if (!nombreValido) {
+        alert("Por favor, ingresá tu nombre completo.");
+        inputNombre.focus();
+        return false;
+    }
+    if (!emailValido) {
+        alert("Por favor, ingresá un correo electrónico válido.");
+        inputEmail.focus();
+        return false;
+    }
+    if (!telefonoValido) {
+        alert("Por favor, ingresá un número de teléfono válido (mínimo 8 dígitos).");
+        inputTelefono.focus();
+        return false;
+    }
+
+    return true;
+}
+function mostrarResumenReserva() {
+    const elServicio = document.getElementById("resumenServicio");
+    if (elServicio) elServicio.textContent = servicioNombre || "No seleccionado";
+
+    const elFecha = document.getElementById("resumenFecha");
+    if (elFecha && fechaSeleccionada) {
+        const [anio, mes, dia] = fechaSeleccionada.split("-").map(Number);
+        const fechaObj = new Date(anio, mes - 1, dia);
+        const fechaTexto = fechaObj.toLocaleDateString("es-AR", {
+            day: "numeric",
+            month: "long"
+        });
+        elFecha.textContent = fechaTexto;
+    }
+
+    const elHora = document.getElementById("resumenHora");
+    if (elHora) elHora.textContent = horaSeleccionada ? `${horaSeleccionada} hs` : "No seleccionada";
+
+    const elNombre = document.getElementById("resumenNombre");
+    if (elNombre) elNombre.textContent = datosCliente.nombre || "-";
+
+    const elTelefono = document.getElementById("resumenTelefono");
+    if (elTelefono) elTelefono.textContent = datosCliente.telefono || "-";
+
+    const elEmail = document.getElementById("resumenEmail");
+    const rowEmail = document.getElementById("rowResumenEmail");
+    
+    if (datosCliente.email) {
+        if (elEmail) elEmail.textContent = datosCliente.email;
+        if (rowEmail) rowEmail.style.display = "flex";
+    } else {
+        if (rowEmail) rowEmail.style.display = "none";
+    }
+
+    const elObs = document.getElementById("resumenNotas");
+    const rowObs = document.getElementById("rowResumenObs");
+    
+    if (datosCliente.notas) {
+        if (elObs) elObs.textContent = datosCliente.notas;
+        if (rowObs) rowObs.style.display = "flex";
+    } else {
+        if (rowObs) rowObs.style.display = "none";
+    }
+}
+/* =================================
+   FORMULARIO - botones
+================================= */
+btnConfirmarReserva.addEventListener("click", async () => {
+    const reservaData = {
+        servicio: servicioSeleccionado,
+        fecha: fechaSeleccionada,
+        hora: horaSeleccionada,
+        cliente: datosCliente
+    };
+
+    try {
+        btnConfirmarReserva.disabled = true;
+        btnConfirmarReserva.textContent = "Guardando...";
+
+        const respuesta = await fetch("http://localhost:3000/api/reservas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(reservaData)
+        });
+
+        if (respuesta.ok) {
+            paso5.classList.remove("active");
+            paso6.classList.add("active");
+
+            if (stepper) stepper.classList.add("hidden");
+        } else {
+            alert("No se pudo confirmar la reserva. Por favor reintentá.");
+        }
+    } catch (error) {
+        console.error("Error al procesar la reserva:", error);
+        alert("Ocurrió un error al conectar con el servidor.");
+    } finally {
+        btnConfirmarReserva.disabled = false;
+        btnConfirmarReserva.textContent = "Confirmar Reserva";
+    }
+});
+
+
+/* =================================
+   BOTONES - variables
+================================= */
+const btnSiguiente1 = document.getElementById("btnSiguiente1");
+const btnAtras2 = document.getElementById("btnAnterior2");
+const btnSiguiente2 = document.getElementById("btnSiguiente2");
+const btnAtras3 = document.getElementById("btnAnterior3");
+const btnSiguiente3 = document.getElementById("btnSiguiente3");
+const btnAtras4 = document.getElementById("btnAnterior4");
+const btnSiguiente4 = document.getElementById("btnSiguiente4");
+const btnAnterior5 = document.getElementById("btnAnterior5");
+const btnSiguiente5 = document.getElementById("btnSiguiente5");
+/* =================================
+   botones - variables
+================================= */
+btnSiguiente1.addEventListener("click", () => {
+
+    if (!servicioSeleccionado) {
+    alert("Seleccioná un servicio.");
+    return;
+    }
+
+    paso1.classList.remove("active");
+
+    paso2.classList.add("active");
+
+    steps[0].classList.remove("active");
+    steps[1].classList.add("active");
+
+});
+btnAtras2.addEventListener("click", () => {
+
+    paso2.classList.remove("active");
+    paso1.classList.add("active");
+
+    steps[1].classList.remove("active");
+    steps[0].classList.add("active");
+
+    restaurarServicioSeleccionado();
+
+});
+btnSiguiente2.addEventListener("click", () => {
+    if (!fechaSeleccionada) {
+        alert("Seleccioná una fecha.");
+        return;
+    }
+
+    paso2.classList.remove("active");
+    paso3.classList.add("active");
+
+    steps[1].classList.remove("active");
+    steps[2].classList.add("active");
+    console.log("fecha seleccionada" + fechaSeleccionada)
+
+    actualizarTextoFechaPaso3();
+});
+btnAtras3.addEventListener("click", () => {
+    paso3.classList.remove("active");
+    paso2.classList.add("active");
+
+    steps[2].classList.remove("active");
+    steps[1].classList.add("active");
+
+    if (fechaSeleccionada) {
+        const partes = fechaSeleccionada.split("-");
+        anioActual = parseInt(partes[0], 10);
+        mesActual = parseInt(partes[1], 10) - 1;
+    }
+
+    generarCalendario();
+});
+btnSiguiente3.addEventListener("click", () => {
+
+    if (!horaSeleccionada) {
+        alert("Seleccioná un horario.");
+        return;
+    }
+
+    paso3.classList.remove("active");
+
+    paso4.classList.add("active");
+
+    steps[2].classList.remove("active");
+    steps[3].classList.add("active");
+
+});
+btnAtras4.addEventListener("click", () => {
+
+    errorNombre.textContent = "";
+    errorTelefono.textContent = "";
+    errorEmail.textContent = "";
+
+    paso4.classList.remove("active");
+    paso3.classList.add("active");
+
+    steps[3].classList.remove("active");
+    steps[2].classList.add("active");
+
+    if (fechaSeleccionada) {
+        cargarHorarios(fechaSeleccionada);
+    }
+    actualizarTextoFechaPaso3();
+});
+btnSiguiente4.addEventListener("click", () => {
+    if (!validarFormulario()) return;
+
+    datosCliente = {
+        nombre: inputNombre.value.trim(),
+        email: inputEmail.value.trim(),
+        telefono: inputTelefono.value.trim(),
+        notas: inputNotas.value.trim()
+    };
+
+    mostrarResumenReserva();
+
+    paso4.classList.remove("active");
+    paso5.classList.add("active");
+
+
+    if (stepper) {
+        stepper.classList.add("hidden");
+    }
+
+    if (confirmHeader) {
+        confirmHeader.classList.remove("hidden");
+    }
+});
+btnAnterior5.addEventListener("click", () => {
+
+    paso5.classList.remove("active");
+
+    paso4.classList.add("active");
+
+    steps[3].classList.add("active");
+
+    if (confirmHeader) {
+
+        confirmHeader.classList.add("hidden");
+    }
+
+    if (stepper) {
+        stepper.classList.remove("hidden");
+    }
+
+    if (datosCliente.nombre) inputNombre.value = datosCliente.nombre;
+    if (datosCliente.email) inputEmail.value = datosCliente.email;
+    if (datosCliente.telefono) inputTelefono.value = datosCliente.telefono;
+    if (datosCliente.notas) inputNotas.value = datosCliente.notas;
+
+});
+btnSiguiente5.addEventListener("click", () => {
+
+    paso5.classList.remove("active");
+
+    paso6.classList.add("active");
+
+    confirmHeader.classList.add("hidden");
+
+    confirmTwoHeader.classList.remove("hidden");
+});

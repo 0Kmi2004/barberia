@@ -81,3 +81,51 @@ app.get("/api/disponibilidad/:fecha", (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor funcionando en http://localhost:${PORT}`);
 });
+
+
+app.post("/api/reservas", async (req, res) => {
+  try {
+    const { servicio, fecha, hora, cliente } = req.body;
+
+    // 1. Insertar el cliente en la tabla 'clientes'
+    const queryCliente = `
+      INSERT INTO clientes (nombre, telefono, email, observaciones)
+      VALUES (?, ?, ?, ?)
+    `;
+    const valoresCliente = [
+      cliente.nombre,
+      cliente.telefono,
+      cliente.email || null,
+      cliente.notas || null
+    ];
+
+    const [resCliente] = await db.query(queryCliente, valoresCliente);
+    const clienteId = resCliente.insertId; // ID autogenerado del cliente
+
+    // 2. Insertar la reserva vinculando el cliente_id y servicio_id
+    const queryReserva = `
+      INSERT INTO reservas (servicio_id, cliente_id, fecha, hora)
+      VALUES (?, ?, ?, ?)
+    `;
+    const valoresReserva = [
+      servicio,  // ID del servicio
+      clienteId, // ID obtenido del paso anterior
+      fecha,
+      hora
+    ];
+
+    const [resReserva] = await db.query(queryReserva, valoresReserva);
+
+    console.log("Reserva creada con éxito. ID Reserva:", resReserva.insertId);
+
+    return res.status(201).json({ 
+      ok: true, 
+      idReserva: resReserva.insertId,
+      idCliente: clienteId 
+    });
+
+  } catch (error) {
+    console.error("Error al insertar en la base de datos:", error);
+    return res.status(500).json({ ok: false, error: "Error interno del servidor" });
+  }
+});

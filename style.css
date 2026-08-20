@@ -1055,6 +1055,13 @@ text-align: center;
     color: white;
 }
 
+#btnMesAnterior:disabled,
+#btnMesSiguiente:disabled {
+    opacity: 0.3;              /* Se reduce la visibilidad */
+    cursor: not-allowed;        /* Cambia el cursor a un ícono de prohibido */
+    pointer-events: none;      /* Bloquea clicks e interacciones hover */
+}
+
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -1069,39 +1076,32 @@ text-align: center;
     margin: .5em 0em;
 }
 
-.calendar-days {
+#calendarDays {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 7px;
+gap: .1em;
 }
 
 .calendar-day {
-    aspect-ratio: 1.5;
+    width: 100%;
+  padding: 1em .5em;
     border: none;
-    border-radius: 10px;
     background: transparent;
-
-    font-size: 16px;
-    font-weight: 500;
-    color: #ffffff;
-
     cursor: pointer;
-    transition: all .2s;
+  color: #ffffff;
+  border-radius: 10px;
 }
 
 .calendar-day.selected {
-
+    background: #ffffff;
+    color: #000000;
+    font-weight: 600; 
 }
 
 .calendar-day:hover {
-    background: #eee;
+    background: #dddddd;
     color: #000000;
-}
-
-.calendar-day:focus {
-    background: #f47700;
-    color: #000000;
-    scale: 1.03;
+    scale: 1.01;
 }
 
 .calendar-day.other-month {
@@ -1125,7 +1125,6 @@ text-align: center;
     grid-template-columns: repeat(3, 1fr);
     gap: 7px;
     padding: .5em;
-
 }
 
 .horario{
@@ -1165,8 +1164,7 @@ text-align: center;
   scale: 1.01;
 }
 
-
-.time-option:focus {
+.time-option.selected {
     border-color: #e09f11;
     background: #ececec;
     color: #300d0d;

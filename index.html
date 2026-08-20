@@ -308,7 +308,7 @@
     <div class="modal-container">
     
       <div class="modal-header">
-          <div class="steps-container shown" id="stepper">
+          <div class="steps-container" id="stepper">
             <div class="steps">
               <div class="step active">1</div>
               <div class="step">2</div>
@@ -440,45 +440,7 @@
                   <span>SÁB</span>
                 </div>
     
-                <div class="calendar-days">
-    
-                  <!-- Días del mes anterior -->
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-    
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  <div class="calendar-days" id="calendarDays"></div>
-                  
-                </div>
+                <div class="calendar-days" id="calendarDays"></div>
               </div>
             </div>
     
@@ -497,7 +459,7 @@
           <section class="step-content" data-step="3">
             <div class="modal-header-title">
               <h3>Reservá un horario</h3>
-              <h4>Viernes, 13 de agosto</h4>
+              <h4 id="textoFechaElegida">jueves, 13 de agosto</h4>
             </div>
             <div class="horarios" id="timeGrid">
               <button type="button" class="horario"></button>
@@ -539,35 +501,29 @@
     
             <div class="personal-data-form">
               <div class="form-group">
-                <label for="nombre">
-                  Nombre y Apellido
-                </label>
+                <label for="nombre">Nombre y Apellido</label>
                 <div class="input-wrapper">
                   <span class="input-icon">
                     <i class="fa-regular fa-user"></i>
                   </span>
-                  <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" autocomplete="name">
+                  <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre" autocomplete="name">
                 </div>
                 <small class="form-error" id="errorNombre"></small>
               </div>
     
               <div class="form-group">
-                <label for="telefono">
-                  Teléfono
-                </label>
+                <label for="telefono">Teléfono</label>
                 <div class="input-wrapper">
                   <span class="input-icon">
                     <i class="fa-solid fa-phone"></i>
                   </span>
-                  <input type="tel" id="telefono" name="telefono" placeholder="Tu número de teléfono" autocomplete="tel">
+                  <input type="tel" id="telefono" name="telefono" required placeholder="Tu número de teléfono" autocomplete="tel">
                 </div>
                 <small class="form-error" id="errorTelefono"></small>
               </div>
     
               <div class="form-group">
-                <label for="email">
-                  Email <span>(opcional)</span>
-                </label>
+                <label for="email">Email <span>(opcional)</span></label>
                 <div class="input-wrapper">
                   <span class="input-icon">
                     <i class="fa-regular fa-envelope"></i>
@@ -578,14 +534,12 @@
               </div>
     
               <div class="form-group">
-                <label for="observaciones">
-                  Observaciones <span>(opcional)</span>
-                </label>
+                <label for="notas">Observaciones <span>(opcional)</span></label>
                 <div class="textarea-wrapper">
                   <span class="textarea-icon">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </span>
-                  <textarea id="observaciones" name="observaciones" placeholder="Contanos algo que debamos saber..."
+                  <textarea id="notas" name="notas" placeholder="Contanos algo que debamos saber..."
                     rows="3"></textarea>
                 </div>
               </div>
@@ -622,7 +576,7 @@
     
                       <p>Servicio</p>
                     </div>
-                    <p>Corte + Barba</p>
+                    <p id="resumenServicio">-</p>
                   </div>
     
                   <div class="confirmation-line">
@@ -633,7 +587,7 @@
     
                       <p>Fecha</p>
                     </div>
-                    <p>Viernes 30 de julio</p>
+                    <p id="resumenFecha">Viernes 30 de julio</p>
                   </div>
     
                   <div class="confirmation-line">
@@ -644,7 +598,7 @@
     
                       <p>Hora</p>
                     </div>
-                    <p>10:30</p>
+                    <p id="resumenHorario">10:30</p>
                   </div>
     
                   <div class="confirmation-line">
@@ -655,7 +609,7 @@
     
                       <p>Precio</p>
                     </div>
-                    <p>20.000</p>
+                    <p id="resumenPrecio">20.000</p>
                   </div>
                 </div>
               </div>
@@ -669,22 +623,22 @@
     
                   <div class="confirmation-line">
                     <p class="name-after">Nombre</p>
-                    <P>Camilo Marquez</P>
+                    <P id="resumenNombre"></P>
                   </div>
     
                   <div class="confirmation-line">
                     <p class="name-after">Teléfono</p>
-                    <P>1132027488</P>
+                    <P id="resumenTelefono"></P>
                   </div>
     
-                  <div class="confirmation-line">
+                  <div class="confirmation-line" id="rowResumenEmail">
                     <p class="name-after">Email</p>
-                    <P>marquezcamilo1134@gmail.com</P>
+                    <P id="resumenEmail"></P>
                   </div>
     
-                  <div class="confirmation-line">
+                  <div class="confirmation-line" id="rowResumenObs">
                     <p class="name-after">Observaciones</p>
-                    <P>Sin observaciones</P>
+                    <P id="resumenNotas"></P>
                   </div>
                 </div>
               </div>
@@ -694,7 +648,7 @@
               <button type="button" class="modal-button secondary" id="btnAnterior5">
                 Atrás
               </button>
-              <button type="button" class="modal-button" id="btnSiguiente5">
+              <button type="button" class="modal-button" id="btnConfirmarReserva">
                 Confirmar
               </button>
             </div>
