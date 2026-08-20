@@ -24,7 +24,8 @@ const paso6 = document.querySelector('.step-content[data-step="6"]');
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
 let servicioSeleccionado = null;
-let servicioNombre = null; // Guardará el texto para el Paso 5
+let servicioNombre = null; 
+let servicioPrecio = null;
 
 function resetWizard() {
 
@@ -67,7 +68,6 @@ function resetWizard() {
     }
 }
 function abrirModal() {
-    // Solo resetea la primera vez que abre desde cero
     if (!modal.classList.contains("active")) {
         resetWizard();
     }
@@ -118,29 +118,19 @@ modal.addEventListener("click", (e) => {
 ================================= */
 const serviceCards = document.querySelectorAll(".modal-service-card");
 function restaurarServicioSeleccionado() {
-
     if (!servicioSeleccionado) {
         return;
     }
-
     serviceCards.forEach(card => {
-
         const radio = card.querySelector('input[type="radio"]');
-
         if (radio.value === servicioSeleccionado) {
-
             radio.checked = true;
             card.classList.add("selected");
-
         } else {
-
             radio.checked = false;
             card.classList.remove("selected");
-
         }
-
     });
-
 }
 /* =================================
    servicio - clicks
@@ -148,27 +138,16 @@ function restaurarServicioSeleccionado() {
 serviceCards.forEach(card => {
     card.addEventListener("click", () => {
         const radio = card.querySelector('input[type="radio"]');
-
-        // Seleccionar radio
         radio.checked = true;
-
-        // 1. Guardar el ID para la API/Backend
         servicioSeleccionado = radio.value;
-
-        // 2. Guardar el NOMBRE para el resumen (Paso 5)
-        // Busca la etiqueta del nombre o el texto dentro del card
         const elementoNombre = card.querySelector(".service-title") || card.querySelector("h4") || card.querySelector("label");
         servicioNombre = elementoNombre ? elementoNombre.textContent.trim() : `Servicio #${radio.value}`;
-
         serviceCards.forEach(c => {
             c.classList.remove("selected");
         });
-
-        // Marcar tarjeta actual
         card.classList.add("selected");
-
-        console.log("ID Servicio:", servicioSeleccionado);
-        console.log("Nombre Servicio:", servicioNombre);
+        const elementoPrecio = card.querySelector(".service-price");
+        servicioPrecio = elementoPrecio ? elementoPrecio.textContent.trim() : null;
     });
 });
 
@@ -182,7 +161,7 @@ const btnMesAnterior = document.getElementById("btnMesAnterior");
 const btnMesSiguiente = document.getElementById("btnMesSiguiente");
 const mesMinimo = 7; // Agosto
 const mesMaximo = 11; // Diciembre
-let mesActual = 7; // Agosto = 7
+let mesActual = 7; 
 let anioActual = 2026;
 
 function generarCalendario() {
@@ -195,7 +174,6 @@ function generarCalendario() {
     let diaSemanaInicio = primerDia.getDay();
     let offset = diaSemanaInicio === 0 ? 0 : diaSemanaInicio - 1;
 
-    // Rellenar días anteriores
     const ultimoDiaMesAnterior = new Date(anioActual, mesActual, 0).getDate();
     let diasAgregados = 0;
     let diaMesAnterior = ultimoDiaMesAnterior;
@@ -215,11 +193,10 @@ function generarCalendario() {
     }
     botonesAnteriores.forEach(btn => calendarDaysContainer.appendChild(btn));
 
-    // Renderizar días del mes actual
     for (let dia = 1; dia <= cantidadDias; dia++) {
         const fechaObj = new Date(anioActual, mesActual, dia);
 
-        if (fechaObj.getDay() === 0) continue; // Saltear domingo
+        if (fechaObj.getDay() === 0) continue;
 
         const button = document.createElement("button");
         button.type = "button";
@@ -232,7 +209,6 @@ function generarCalendario() {
 
         button.dataset.fecha = fechaString;
 
-        // VERIFICACIÓN DE SELECCIÓN PREVIA
         if (fechaSeleccionada && fechaSeleccionada === fechaString) {
             button.classList.add("selected");
         }
@@ -279,8 +255,6 @@ function agregarEventosDias() {
 
             fechaSeleccionada = day.dataset.fecha;
 
-            console.log("Fecha guardada correctamente:", fechaSeleccionada);
-
             await cargarHorarios(fechaSeleccionada);
         });
     });
@@ -288,45 +262,32 @@ function agregarEventosDias() {
 function marcarFechaSeleccionada() {
     if (!fechaSeleccionada) return;
 
-    // Buscar el botón que tenga el atributo data-fecha idéntico a fechaSeleccionada
     const botonGuardado = calendarDaysContainer.querySelector(
         `.calendar-day[data-fecha="${fechaSeleccionada}"]`
     );
 
     if (botonGuardado) {
-        // Quitar previas selecciones
         calendarDaysContainer.querySelectorAll(".calendar-day").forEach(b => {
             b.classList.remove("selected");
         });
-
-        // Marcar el botón encontrado
         botonGuardado.classList.add("selected");
     }
 }
 /* =================================
-   calendarios - clicks
+   calendario - clicks
 ================================= */
 btnMesSiguiente.addEventListener("click", () => {
-
     if (mesActual < mesMaximo) {
-
         mesActual++;
-
         generarCalendario();
-
     }
 
 });
 btnMesAnterior.addEventListener("click", () => {
-
     if (mesActual > mesMinimo) {
-
         mesActual--;
-
         generarCalendario();
-
     }
-
 });
 generarCalendario();
 
@@ -337,7 +298,6 @@ generarCalendario();
 const timeGrid = document.getElementById("timeGrid");
 const selectedDateHeader = document.getElementById("textoFechaElegida");
 async function cargarHorarios(fecha) {
-
     try {
         const respuesta = await fetch(
             `http://localhost:3000/api/disponibilidad/${fecha}`
@@ -346,7 +306,6 @@ async function cargarHorarios(fecha) {
             throw new Error("No se pudo obtener la disponibilidad");
         }
         const horarios = await respuesta.json();
-        console.log("Horarios disponibles:", horarios);
         timeGrid.innerHTML = "";
         horarios.forEach(hora => {
             const button = document.createElement("button");
@@ -362,19 +321,12 @@ async function cargarHorarios(fecha) {
                 });
                 button.classList.add("selected");
                 horaSeleccionada = hora;
-                console.log("Hora seleccionada:", horaSeleccionada);
     });
-
    timeGrid.appendChild(button);
-
     });
-
     } catch (error) {
-
-        console.error("Error al cargar horarios:", error);
-
+        alert("Error al cargar horarios:", error);
     }
-
 }
 function actualizarTextoFechaPaso3() {
     if (!fechaSeleccionada || !selectedDateHeader) return;
@@ -432,52 +384,8 @@ function validarFormulario() {
 
     return true;
 }
-function mostrarResumenReserva() {
-    const elServicio = document.getElementById("resumenServicio");
-    if (elServicio) elServicio.textContent = servicioNombre || "No seleccionado";
-
-    const elFecha = document.getElementById("resumenFecha");
-    if (elFecha && fechaSeleccionada) {
-        const [anio, mes, dia] = fechaSeleccionada.split("-").map(Number);
-        const fechaObj = new Date(anio, mes - 1, dia);
-        const fechaTexto = fechaObj.toLocaleDateString("es-AR", {
-            day: "numeric",
-            month: "long"
-        });
-        elFecha.textContent = fechaTexto;
-    }
-
-    const elHora = document.getElementById("resumenHora");
-    if (elHora) elHora.textContent = horaSeleccionada ? `${horaSeleccionada} hs` : "No seleccionada";
-
-    const elNombre = document.getElementById("resumenNombre");
-    if (elNombre) elNombre.textContent = datosCliente.nombre || "-";
-
-    const elTelefono = document.getElementById("resumenTelefono");
-    if (elTelefono) elTelefono.textContent = datosCliente.telefono || "-";
-
-    const elEmail = document.getElementById("resumenEmail");
-    const rowEmail = document.getElementById("rowResumenEmail");
-    
-    if (datosCliente.email) {
-        if (elEmail) elEmail.textContent = datosCliente.email;
-        if (rowEmail) rowEmail.style.display = "flex";
-    } else {
-        if (rowEmail) rowEmail.style.display = "none";
-    }
-
-    const elObs = document.getElementById("resumenNotas");
-    const rowObs = document.getElementById("rowResumenObs");
-    
-    if (datosCliente.notas) {
-        if (elObs) elObs.textContent = datosCliente.notas;
-        if (rowObs) rowObs.style.display = "flex";
-    } else {
-        if (rowObs) rowObs.style.display = "none";
-    }
-}
 /* =================================
-   FORMULARIO - botones
+   formulario - clicks
 ================================= */
 btnConfirmarReserva.addEventListener("click", async () => {
     const reservaData = {
@@ -506,13 +414,83 @@ btnConfirmarReserva.addEventListener("click", async () => {
             alert("No se pudo confirmar la reserva. Por favor reintentá.");
         }
     } catch (error) {
-        console.error("Error al procesar la reserva:", error);
         alert("Ocurrió un error al conectar con el servidor.");
     } finally {
         btnConfirmarReserva.disabled = false;
         btnConfirmarReserva.textContent = "Confirmar Reserva";
     }
+    confirmHeader.classList.add("hidden");
+
+    confirmTwoHeader.classList.remove("hidden");
 });
+
+
+/* =================================
+   CONFIRMACIÓN - variables
+================================= */
+function mostrarResumenReserva() {
+    const elServicio = document.getElementById("resumenServicio");
+    if (elServicio) elServicio.textContent = servicioNombre || "No seleccionado";
+    const exServicio = document.getElementById("exitoServicio");
+    if (exServicio) exServicio.textContent = servicioNombre || "No seleccionado";
+
+    const elPrecio = document.getElementById("resumenPrecio");
+    if (elPrecio) elPrecio.textContent = servicioPrecio || "-";
+    const exPrecio = document.getElementById("exitoPrecio");
+    if (exPrecio) exPrecio.textContent = servicioPrecio || "-";
+
+    const elFecha = document.getElementById("resumenFecha");
+    if (elFecha && fechaSeleccionada) {
+        const [anio, mes, dia] = fechaSeleccionada.split("-").map(Number);
+        const fechaObj = new Date(anio, mes - 1, dia);
+        const fechaTexto = fechaObj.toLocaleDateString("es-AR", {
+            day: "numeric",
+            month: "long"
+        });
+        elFecha.textContent = fechaTexto;
+    }
+    const exFecha = document.getElementById("exitoFecha");
+    if (exFecha && fechaSeleccionada) {
+        const [anio, mes, dia] = fechaSeleccionada.split("-").map(Number);
+        const fechaObj = new Date(anio, mes - 1, dia);
+        const fechaTexto = fechaObj.toLocaleDateString("es-AR", {
+            day: "numeric",
+            month: "long"
+        });
+        exFecha.textContent = fechaTexto;
+    }
+
+    const elHora = document.getElementById("resumenHora");
+    if (elHora) elHora.textContent = horaSeleccionada ? `${horaSeleccionada}hs` : "No seleccionada";
+    const exHora = document.getElementById("exitoHora");
+    if (exHora) exHora.textContent = horaSeleccionada ? `${horaSeleccionada}hs` : "No seleccionada";
+
+    const elNombre = document.getElementById("resumenNombre");
+    if (elNombre) elNombre.textContent = datosCliente.nombre || "-";
+
+    const elTelefono = document.getElementById("resumenTelefono");
+    if (elTelefono) elTelefono.textContent = datosCliente.telefono || "-";
+
+    const elEmail = document.getElementById("resumenEmail");
+    const rowEmail = document.getElementById("rowResumenEmail");
+    
+    if (datosCliente.email) {
+        if (elEmail) elEmail.textContent = datosCliente.email;
+        if (rowEmail) rowEmail.style.display = "flex";
+    } else {
+        if (rowEmail) rowEmail.style.display = "none";
+    }
+
+    const elObs = document.getElementById("resumenNotas");
+    const rowObs = document.getElementById("rowResumenObs");
+    
+    if (datosCliente.notas) {
+        if (elObs) elObs.textContent = datosCliente.notas;
+        if (rowObs) rowObs.style.display = "flex";
+    } else {
+        if (rowObs) rowObs.style.display = "none";
+    }
+}
 
 
 /* =================================
@@ -526,9 +504,8 @@ const btnSiguiente3 = document.getElementById("btnSiguiente3");
 const btnAtras4 = document.getElementById("btnAnterior4");
 const btnSiguiente4 = document.getElementById("btnSiguiente4");
 const btnAnterior5 = document.getElementById("btnAnterior5");
-const btnSiguiente5 = document.getElementById("btnSiguiente5");
 /* =================================
-   botones - variables
+   botones - clicks
 ================================= */
 btnSiguiente1.addEventListener("click", () => {
 
@@ -567,7 +544,6 @@ btnSiguiente2.addEventListener("click", () => {
 
     steps[1].classList.remove("active");
     steps[2].classList.add("active");
-    console.log("fecha seleccionada" + fechaSeleccionada)
 
     actualizarTextoFechaPaso3();
 });
@@ -664,14 +640,4 @@ btnAnterior5.addEventListener("click", () => {
     if (datosCliente.telefono) inputTelefono.value = datosCliente.telefono;
     if (datosCliente.notas) inputNotas.value = datosCliente.notas;
 
-});
-btnSiguiente5.addEventListener("click", () => {
-
-    paso5.classList.remove("active");
-
-    paso6.classList.add("active");
-
-    confirmHeader.classList.add("hidden");
-
-    confirmTwoHeader.classList.remove("hidden");
 });

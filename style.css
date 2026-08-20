@@ -1127,26 +1127,7 @@ gap: .1em;
     padding: .5em;
 }
 
-.horario{
-  background-color: #300d0d;
-  color: white;
-  border-radius: 10px;
-  font-size: 18px;
-  padding: .8em 0em;
 
-  border: none;
-  cursor: pointer;
-}
-
-.horario:hover{
-  scale: 1.03;
-}
-
-.horario:focus{
-  background-color: #f47700;
-  scale: 1.03;
-  color: #000;
-}
 
 .time-option {
   background-color: #300d0d;

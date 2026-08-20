@@ -361,7 +361,7 @@
                   <div class="modal-subcard-text">
                     <h4>Corte</h4>
                     <p>⏱ 45 min</p>
-                    <strong>$15.000</strong>
+                    <strong class="service-price">$15.000</strong>
                   </div>
                   <label class="card-radio">
                     <input type="radio" name="service" id="corte" value="1">
@@ -371,13 +371,14 @@
                   </label>
                 </div>
               </article>
+
               <article class="modal-service-card">
                 <img src="assets/corte2.webp" alt="">
                 <div class="modal-card-text">
                   <div class="modal-subcard-text">
                     <h4>Barba</h4>
                     <p>⏱ 30 min</p>
-                    <strong>$8.000</strong>
+                    <strong class="service-price">$8.000</strong>
                   </div>
                   <label class="card-radio">
                     <input type="radio" name="service" id="barba" value="2">
@@ -387,13 +388,14 @@
                   </label>
                 </div>
               </article>
+
               <article class="modal-service-card">
                 <img src="assets/corte3.webp" alt="">
                 <div class="modal-card-text">
                   <div class="modal-subcard-text">
                     <h4>Corte + Barba</h4>
                     <p>⏱ 60 min</p>
-                    <strong>$20.000</strong>
+                    <strong class="service-price">$20.000</strong>
                   </div>
                   <label class="card-radio">
                     <input type="radio" name="service" id="cortebarba" value="3">
@@ -462,25 +464,7 @@
               <h4 id="textoFechaElegida">jueves, 13 de agosto</h4>
             </div>
             <div class="horarios" id="timeGrid">
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-    
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-    
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-    
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-    
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
-              <button type="button" class="horario"></button>
+
             </div>
     
             <div class="modal-button-footer">
@@ -598,7 +582,7 @@
     
                       <p>Hora</p>
                     </div>
-                    <p id="resumenHorario">10:30</p>
+                    <p id="resumenHora"></p>
                   </div>
     
                   <div class="confirmation-line">
@@ -674,7 +658,7 @@
     
                     <p>Servicio</p>
                   </div>
-                  <p>Corte + Barba</p>
+                  <p id="exitoServicio"></p>
                 </div>
     
                 <div class="confirmation-line">
@@ -685,7 +669,7 @@
     
                     <p>Fecha</p>
                   </div>
-                  <p>Viernes 30 de julio</p>
+                  <p id="exitoFecha"></p>
                 </div>
     
                 <div class="confirmation-line">
@@ -696,7 +680,7 @@
     
                     <p>Hora</p>
                   </div>
-                  <p>10:30</p>
+                  <p id="exitoHora"></p>
                 </div>
     
                 <div class="confirmation-line">
@@ -707,7 +691,7 @@
     
                     <p>Precio</p>
                   </div>
-                  <p>20.000</p>
+                  <p id="exitoPrecio"></p>
                 </div>
               </div>
             </div>

@@ -1,24 +1,14 @@
-const mysql = require("mysql2/promise");
-const dotenv = require("dotenv");
+require('dotenv').config(); // Carga las variables del archivo .env
+const mysql = require('mysql2/promise');
 
-dotenv.config();
-
-
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD, // Usa la variable de entorno
+    database: process.env.DB_NAME || 'barberia',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-connection.connect((error) => {
-    if (error) {
-        console.error("Error al conectar con MySQL:", error);
-        return;
-    }
-
-    console.log("Conexión con MySQL establecida");
-});
-
-module.exports = connection;
+module.exports = pool;
