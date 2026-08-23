@@ -11,11 +11,12 @@ const horariosAtencion = {
 
 function generarHorarios(fecha) {
 
+    
+
     const diaSemana = new Date(fecha + "T00:00:00").getDay();
 
     const horario = horariosAtencion[diaSemana];
 
-    // Si la barbería está cerrada
     if (!horario) {
         return [];
     }

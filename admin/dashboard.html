@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Control | Agenda de Barbería</title>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><i data-lucide="scissors"></i> El Chueco</div>
+    <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
+  </header>
+
+  <main>
+
+    <section>
+      <div class="section-header">
+        <h2>Agenda de Turnos</h2>
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label for="date-picker">Fecha:
+              <span id="selected-date-display" class="selected-date-btn">Cargando...</span>
+            </label>
+            <div class="calendar-container">
+              <div class="calendar">
+        
+                <div class="calendar-header">
+
+                  <svg id="btnMesAnterior" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
+        
+                  <h4 id="calendarTitle">Septiembre 2026</h4>
+        
+                  <svg id="btnMesSiguiente" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+        
+                <div class="calendar-weekdays">
+                  <span>LUN</span>
+                  <span>MAR</span>
+                  <span>MIÉ</span>
+                  <span>JUE</span>
+                  <span>VIE</span>
+                  <span>SÁB</span>
+                </div>
+        
+                <div class="calendar-days" id="calendarDays"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="status-filter">Estado:</label>
+            <select id="status-filter">
+              <option value="todos">Todos los estados</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="completada">Completados</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Servicio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="appointments-list">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <h3>Pendientes</h3>
+        <div class="number" id="pending-count"></div>
+      </div>
+      <div class="metric-card">
+        <h3>Completados</h3>
+        <div class="number" id="completed-count"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

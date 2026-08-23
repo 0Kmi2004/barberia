@@ -166,6 +166,8 @@ let anioActual = 2026;
 
 function generarCalendario() {
     calendarDaysContainer.innerHTML = "";
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
 
     const primerDia = new Date(anioActual, mesActual, 1);
     const ultimoDia = new Date(anioActual, mesActual + 1, 0);
@@ -208,6 +210,12 @@ function generarCalendario() {
         const fechaString = `${anioActual}-${mesFormateado}-${diaFormateado}`;
 
         button.dataset.fecha = fechaString;
+
+        fechaObj.setHours(0, 0, 0, 0);
+        if (fechaObj < hoy) {
+            button.disabled = true;
+            button.classList.add("other-month"); 
+        }
 
         if (fechaSeleccionada && fechaSeleccionada === fechaString) {
             button.classList.add("selected");
@@ -307,25 +315,52 @@ async function cargarHorarios(fecha) {
         }
         const horarios = await respuesta.json();
         timeGrid.innerHTML = "";
-        horarios.forEach(hora => {
+
+        const ahora = new Date();
+        const hoyString = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+        const esHoy = (fecha === hoyString);
+        const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
+
+        horarios.forEach(slot => {
             const button = document.createElement("button");
             button.type = "button";
             button.classList.add("time-option");
-            button.textContent = hora;
-            if (horaSeleccionada && hora === horaSeleccionada) {
-                button.classList.add("selected");
+
+            const esObjeto = typeof slot === "object" && slot !== null;
+            const horaTexto = esObjeto ? slot.hora : slot;
+            let estaDisponible = esObjeto ? slot.disponible : true;
+
+            if (esHoy && estaDisponible) {
+                const [h, m] = horaTexto.split(":").map(Number);
+                const minutosSlot = h * 60 + m;
+                if (minutosSlot <= minutosActuales) {
+                    estaDisponible = false;
+                }
             }
-            button.addEventListener("click", () => {
-                document.querySelectorAll(".time-option").forEach(b => {
-                    b.classList.remove("selected");
+
+            button.textContent = horaTexto;
+
+            if (!estaDisponible) {
+                button.disabled = true;
+                button.classList.add("occupied");
+            } else {
+                if (horaSeleccionada && horaTexto === horaSeleccionada) {
+                    button.classList.add("selected");
+                }
+
+                button.addEventListener("click", () => {
+                    document.querySelectorAll(".time-option").forEach(b => {
+                        b.classList.remove("selected");
+                    });
+                    button.classList.add("selected");
+                    horaSeleccionada = horaTexto;
                 });
-                button.classList.add("selected");
-                horaSeleccionada = hora;
-    });
-   timeGrid.appendChild(button);
-    });
+            }
+
+            timeGrid.appendChild(button);
+        });
     } catch (error) {
-        alert("Error al cargar horarios:", error);
+        alert("Error al cargar horarios: " + error.message);
     }
 }
 function actualizarTextoFechaPaso3() {

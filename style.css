@@ -1153,6 +1153,13 @@ gap: .1em;
     scale: 1.01;
 }
 
+.time-option.occupied {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+
+}
+
 /* =================================
    MODAL 4
 ================================= */
