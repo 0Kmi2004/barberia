@@ -1,7 +1,11 @@
-require('dotenv').config();
-
 const fs = require('fs/promises');
 const path = require('path');
+const dotenv = require('dotenv');
+const mysql = require('mysql2/promise');
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 const db = require('./config/database');
 
 const migrationsDirectory = path.join(__dirname, 'migrations');
@@ -14,7 +18,26 @@ function statementsFrom(sql) {
     .filter(Boolean);
 }
 
+async function ensureDatabase() {
+  const connection = await mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD
+  });
+
+  try {
+    await connection.query(
+      'CREATE DATABASE IF NOT EXISTS ?? CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
+      [process.env.DB_NAME || 'barberia']
+    );
+  } finally {
+    await connection.end();
+  }
+}
+
 async function migrate() {
+  await ensureDatabase();
   const connection = await db.getConnection();
 
   try {

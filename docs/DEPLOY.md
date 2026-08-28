@@ -60,7 +60,7 @@ DB_PASSWORD=contraseña_de_la_base
 JWT_SECRET=una-clave-larga-aleatoria-y-secreta
 ```
 
-No subas `.env` al repositorio ni lo publiques dentro de la carpeta del frontend. `JWT_SECRET` debe ser diferente en cada entorno y no debe usar valores de ejemplo.
+No subas `.env` al repositorio ni lo publiques dentro de la carpeta del frontend. `DB_*` son las variables que consume el backend. `MYSQL_ROOT_PASSWORD` solo es necesaria para la inicialización de MySQL mediante Docker Compose y no se necesita en este flujo sin Docker. `JWT_SECRET` debe ser diferente en cada entorno y no debe usar valores de ejemplo.
 
 ## Construir el frontend
 

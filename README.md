@@ -1,18 +1,26 @@
 # Barbería
 
-Vanilla-JavaScript web application, Express API, and MySQL database.
+Aplicación web con JavaScript vanilla, API Express y base de datos MySQL.
 
-## Local development
+## Desarrollo local con Docker
 
-Copy `.env.example` to `.env` and choose local secrets. Start MySQL and the API with Docker:
+Copiá `.env.example` como `.env` y configurá los secretos locales. Iniciá MySQL y la API con Docker:
 
 ```bash
 docker compose up --build
 ```
+### Comandos útiles
 
-The application is available at `http://localhost:8080`; the API health endpoint is `http://localhost:3000/health`.
+```bash
+docker compose up --build
+docker compose down
+docker compose down -v # también elimina los datos locales de MySQL
+```
 
-For frontend-only development with hot reload, start the API first and then run:
+
+La aplicación está disponible en `http://localhost:8080`; el endpoint de salud de la API es `http://localhost:3000/health`.
+
+Para desarrollar únicamente el frontend con recarga automática, iniciá primero la API y luego ejecutá:
 
 ```bash
 cd web
@@ -20,15 +28,15 @@ npm install
 npm run dev
 ```
 
-Vite serves the site on `http://localhost:5173` and proxies `/api` calls to the API on port 3000.
+Vite sirve el sitio en `http://localhost:5173` y redirige las llamadas `/api` a la API en el puerto 3000.
 
-## Local development without Docker
+## Desarrollo local sin Docker
 
-Docker is not required when MySQL Server is already installed locally.
+Docker no es necesario si MySQL Server ya está instalado localmente.
 
-### MySQL configuration
+### Configuración de MySQL
 
-Create the `barberia` database and a dedicated MySQL user using your local MySQL installation. The backend reads these variables:
+Creá la base de datos `barberia` y un usuario dedicado usando tu instalación local de MySQL. El backend lee estas variables:
 
 ```env
 DB_HOST=127.0.0.1
@@ -39,56 +47,36 @@ PORT=3000
 JWT_SECRET=your_long_local_secret
 ```
 
-When running the backend from the `backend/` directory, place these values in `backend/.env`. Do not commit this file. The root `.env` contains the `MYSQL_*` variables used by Docker Compose, while `backend/config/database.js` expects the `DB_*` variables when running outside Docker.
+`MYSQL_ROOT_PASSWORD` solo es necesaria al iniciar MySQL con Docker Compose.
 
-### Start the API
+### Iniciar la aplicación
 
-From the backend directory:
-
-```bash
-cd backend
-npm ci
-npm run migrate
-npm start
-```
-
-The API runs on `http://localhost:3000`. Verify it with `http://localhost:3000/health`.
-
-### Start the frontend
-
-In a second terminal:
+Con MySQL ya iniciado localmente y el `.env` raíz configurado, iniciá la API y el frontend juntos con:
 
 ```bash
-cd web
-npm ci
-npm run dev
+./start_withouth_docker.sh
 ```
 
-Vite runs the frontend on `http://localhost:5173` and proxies `/api` requests to the API on port 3000.
+El script verifica el entorno local, instala las dependencias faltantes, ejecuta las migraciones, inicia la API backend en el puerto 3000 y el frontend en el puerto 5173. Presioná `Ctrl+C` para detener ambos procesos.
 
-For a production-like frontend preview, build and serve the generated files instead:
+La aplicación está disponible en `http://localhost:5173` y el endpoint de salud de la API es `http://localhost:3000/health`.
+
+## Migraciones de la base de datos
+
+El script auxiliar ejecuta las migraciones automáticamente antes de iniciar la aplicación. Para ejecutar únicamente las migraciones, sin iniciar la API ni el frontend, usá este comando desde la raíz del proyecto:
 
 ```bash
-cd web
-npm run build
-npm run preview
+npm --prefix backend run migrate
 ```
 
-Do not open `web/dist` directly as a file in the browser; use Vite or another HTTP server so asset paths and API requests work correctly.
+El comando de migración utiliza las variables `DB_*` del `.env` raíz y crea la base de datos si no existe. El usuario de la base debe tener permisos para crear bases de datos; de lo contrario, creá `barberia` manualmente antes de ejecutar el comando.
 
-## Database migrations
+Las migraciones también crean un usuario administrador de desarrollo por defecto:
 
-The API container runs migrations before it starts. To run them outside Docker, configure the `DB_*` variables used by `backend/config/database.js` and run:
-
-```bash
-cd backend
-npm run migrate
+```text
+Email: admin@barberia.com
+Contraseña: admin123
 ```
 
-## Useful commands
+Cambiá esta contraseña antes de usar la aplicación en producción.
 
-```bash
-docker compose up --build
-docker compose down
-docker compose down -v # also removes local MySQL data
-```

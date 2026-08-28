@@ -1,5 +1,3 @@
-import './styles/main.css';
-
 window.lucide?.createIcons();
 
 /* =================================
@@ -26,7 +24,7 @@ const paso6 = document.querySelector('.step-content[data-step="6"]');
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
 let servicioSeleccionado = null;
-let servicioNombre = null; 
+let servicioNombre = null;
 let servicioPrecio = null;
 
 function resetWizard() {
@@ -73,7 +71,7 @@ function abrirModal() {
     if (!modal.classList.contains("active")) {
         resetWizard();
     }
-    
+
     modal.classList.add("active");
     confirmHeader.classList.add("hidden");
     confirmTwoHeader.classList.add("hidden");
@@ -163,7 +161,7 @@ const btnMesAnterior = document.getElementById("btnMesAnterior");
 const btnMesSiguiente = document.getElementById("btnMesSiguiente");
 const mesMinimo = 7; // Agosto
 const mesMaximo = 11; // Diciembre
-let mesActual = 7; 
+let mesActual = 7;
 let anioActual = 2026;
 
 function generarCalendario() {
@@ -216,7 +214,7 @@ function generarCalendario() {
         fechaObj.setHours(0, 0, 0, 0);
         if (fechaObj < hoy) {
             button.disabled = true;
-            button.classList.add("other-month"); 
+            button.classList.add("other-month");
         }
 
         if (fechaSeleccionada && fechaSeleccionada === fechaString) {
@@ -510,7 +508,7 @@ function mostrarResumenReserva() {
 
     const elEmail = document.getElementById("resumenEmail");
     const rowEmail = document.getElementById("rowResumenEmail");
-    
+
     if (datosCliente.email) {
         if (elEmail) elEmail.textContent = datosCliente.email;
         if (rowEmail) rowEmail.style.display = "flex";
@@ -520,7 +518,7 @@ function mostrarResumenReserva() {
 
     const elObs = document.getElementById("resumenNotas");
     const rowObs = document.getElementById("rowResumenObs");
-    
+
     if (datosCliente.notas) {
         if (elObs) elObs.textContent = datosCliente.notas;
         if (rowObs) rowObs.style.display = "flex";

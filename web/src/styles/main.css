@@ -69,31 +69,31 @@ button {
 @font-face {
   font-family: 'refont';
   src: url('/fonts/refont.woff2');
-  font-display:swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'pefont';
   src: url('/fonts/pefont.woff2');
-  font-display:swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Bebas Neue';
   src: url('/fonts/Bebas Neue.woff2');
-  font-display:swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roboto Slab';
   src: url('/fonts/Roboto Slab.woff2');
-  font-display:swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'dmfont';
   src: url('/fonts/dmfont.woff2');
-  font-display:swap;
+  font-display: block;
 }
 
 
@@ -173,7 +173,7 @@ button {
   width: clamp(120px, 18vw, 560px);
   border-radius: 50%;
   transform: translateY(-50%);
-    filter: 
+    filter:
     drop-shadow(5px 5px 8px rgba(0, 0, 0, 0.4));
 }
 
@@ -221,7 +221,7 @@ text-align: center;
 
   }
 }
-  
+
 
 /* =========================
    MODALES
@@ -405,7 +405,7 @@ text-align: center;
     box-shadow:
         0 0 15px rgba(255, 137, 0, .35);
 
-    
+
 }
 
 .btn-cerrar {
@@ -463,7 +463,7 @@ text-align: center;
 
     display: none;
 
-  
+
 }
 
 .step-content.active {
@@ -1095,7 +1095,7 @@ gap: .1em;
 .calendar-day.selected {
     background: #ffffff;
     color: #000000;
-    font-weight: 600; 
+    font-weight: 600;
 }
 
 .calendar-day:hover {
@@ -1548,11 +1548,11 @@ gap: .1em;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  
+
 }
 
 .conf-two-header{
-  
+
     color: #fff;
 
     font-size: 1.2rem;
@@ -1766,7 +1766,7 @@ gap: .1em;
   .contact-button img{
     width: 65px;
 
-    filter: 
+    filter:
     drop-shadow(5px 5px 8px rgba(0, 0, 0, 0.4));
   }
 
@@ -2201,7 +2201,7 @@ blockquote {
 ========================= */
 
 .services {
-  
+
   padding: 120px 8%;
 
   background: var(--black);
