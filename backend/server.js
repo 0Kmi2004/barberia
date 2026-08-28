@@ -1,43 +1,57 @@
 const express = require("express");
 const cors = require("cors");
-const path = require('path');
 const db = require("./config/database");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { generarHorarios } = require("./utils/horarios");
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_secreta_barberia';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET debe estar configurado');
+}
 
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, '..')));
+function requireAdmin(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ message: 'No autorizado' });
+  }
+
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Permisos insuficientes' });
+    }
+    req.user = user;
+    return next();
+  } catch (_error) {
+    return res.status(401).json({ message: 'Token inválido o expirado' });
+  }
+}
 
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("=== PETICIÓN RECIBIDA ===", email, password);
-
     if (!email || !password) {
       return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
     }
 
     const sql = 'SELECT * FROM usuarios WHERE email = ?';
     const [usuarios] = await db.query(sql, [email]);
-    console.log("--> Usuarios encontrados en BD:", usuarios);
-
     if (usuarios.length === 0) {
-      console.log("--> ERROR: No se encontró el usuario en la BD");
       return res.status(401).json({ message: 'Credenciales incorrectas' });
     }
 
     const usuario = usuarios[0];
-    console.log("--> Hash almacenado en la BD:", usuario.password);
-
-    const passwordCoincide = (password === 'admin123') || await bcrypt.compare(password, usuario.password);
+    const passwordCoincide = await bcrypt.compare(password, usuario.password);
 
     if (!passwordCoincide) {
       return res.status(401).json({ message: 'Credenciales incorrectas' });
@@ -65,33 +79,15 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.get('/api/admin/verify', (req, res) => {
-  const authHeader = req.headers['authorization'];
-  
-  if (!authHeader) {
-    return res.status(401).json({ message: 'No se proporcionó token' });
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Formato de token inválido' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: 'Token inválido o expirado' });
-    }
-
-    res.status(200).json({ 
-      valid: true, 
-      user: { id: decoded.id, email: decoded.email, role: decoded.role } 
-    });
+app.get('/api/admin/verify', requireAdmin, (req, res) => {
+  res.status(200).json({
+    valid: true,
+    user: { id: req.user.id, email: req.user.email, role: req.user.role }
   });
 });
 
-app.get("/", (req, res) => {
-    res.json({ mensaje: "API de barbería funcionando" });
+app.get("/health", (req, res) => {
+    res.json({ ok: true });
 });
 
 app.get("/api/servicios", async (req, res) => {
@@ -136,7 +132,7 @@ app.get("/api/disponibilidad/:fecha", async (req, res) => {
     }
 });
 
-app.get("/api/admin/fechas-pendientes", async (req, res) => {
+app.get("/api/admin/fechas-pendientes", requireAdmin, async (req, res) => {
   try {
     const sql = `
       SELECT DISTINCT DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha
@@ -189,16 +185,8 @@ app.post("/api/reservas", async (req, res) => {
     } 
 });
 
-app.get('/api/admin/reservas', async (req, res) => {
+app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
-      return res.status(401).json({ message: 'No autorizado' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET);
-
     const { fecha, estado } = req.query;
 
     let sql = `
@@ -244,16 +232,8 @@ app.get('/api/admin/reservas', async (req, res) => {
   }
 });
 
-app.patch('/api/admin/reservas/:id/estado', async (req, res) => {
+app.patch('/api/admin/reservas/:id/estado', requireAdmin, async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
-      return res.status(401).json({ message: 'No autorizado' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET);
-
     const { id } = req.params;
     const { estado } = req.body;
 
@@ -279,14 +259,8 @@ app.patch('/api/admin/reservas/:id/estado', async (req, res) => {
   }
 });
 
-app.get('/api/admin/metricas', async (req, res) => {
+app.get('/api/admin/metricas', requireAdmin, async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) return res.status(401).json({ message: 'No autorizado' });
-
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET);
-
     const fecha = req.query.fecha || new Date().toISOString().split('T')[0];
 
     const [turnosDia] = await db.query(

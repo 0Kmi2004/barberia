@@ -1,4 +1,6 @@
-lucide.createIcons();
+import './styles/main.css';
+
+window.lucide?.createIcons();
 
 /* =================================
    MODALES - variables
@@ -308,7 +310,7 @@ const selectedDateHeader = document.getElementById("textoFechaElegida");
 async function cargarHorarios(fecha) {
     try {
         const respuesta = await fetch(
-            `http://localhost:3000/api/disponibilidad/${fecha}`
+            `/api/disponibilidad/${fecha}`
         );
         if (!respuesta.ok) {
             throw new Error("No se pudo obtener la disponibilidad");
@@ -434,7 +436,7 @@ btnConfirmarReserva.addEventListener("click", async () => {
         btnConfirmarReserva.disabled = true;
         btnConfirmarReserva.textContent = "Guardando...";
 
-        const respuesta = await fetch("http://localhost:3000/api/reservas", {
+        const respuesta = await fetch("/api/reservas", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(reservaData)

@@ -1,0 +1,7 @@
+node_modules
+backend/node_modules
+backend/npm-debug.log
+web/node_modules
+web/dist
+.env
+backend/.env

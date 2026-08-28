@@ -68,31 +68,31 @@ button {
 
 @font-face {
   font-family: 'refont';
-  src: url('./fonts/refont.woff2');
+  src: url('/fonts/refont.woff2');
   font-display:swap;
 }
 
 @font-face {
   font-family: 'pefont';
-  src: url('./fonts/pefont.woff2');
+  src: url('/fonts/pefont.woff2');
   font-display:swap;
 }
 
 @font-face {
   font-family: 'Bebas Neue';
-  src: url('./fonts/Bebas Neue.woff2');
+  src: url('/fonts/Bebas Neue.woff2');
   font-display:swap;
 }
 
 @font-face {
   font-family: 'Roboto Slab';
-  src: url('./fonts/Roboto Slab.woff2');
+  src: url('/fonts/Roboto Slab.woff2');
   font-display:swap;
 }
 
 @font-face {
   font-family: 'dmfont';
-  src: url('./fonts/dmfont.woff2');
+  src: url('/fonts/dmfont.woff2');
   font-display:swap;
 }
 

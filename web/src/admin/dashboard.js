@@ -301,45 +301,55 @@ async function fetchAppointments(fecha = '', estado = 'todos') {
 function renderTable(reservas) {
   const tbody = document.getElementById('appointments-list');
   if (!tbody) return;
-  tbody.innerHTML = '';
+  tbody.replaceChildren();
 
   reservas.forEach(reserva => {
     const tr = document.createElement('tr');
-    
-    const idReserva = reserva.reserva_id;
     const telefono = reserva.cliente_telefono || reserva.telefono || '';
     const estadoLimpio = reserva.estado ? reserva.estado.toLowerCase().trim() : 'pendiente';
 
     tr.className = `row-estado-${estadoLimpio}`;
 
-    tr.innerHTML = `
-      <td>${reserva.hora}</td>
-      <td>${reserva.cliente_nombre}</td>
-      <td>${telefono}</td>
-      <td>${reserva.servicio_nombre}</td>
-      <td><span class="badge badge-${estadoLimpio}">${reserva.estado}</span></td>
-      <td>
-        <button class="action-btn" title="Enviar WhatsApp" 
-          onclick="enviarWhatsApp('${telefono}', '${reserva.cliente_nombre}', '${reserva.fecha}', '${reserva.hora}', '${reserva.servicio_nombre}')">
-          💬
-        </button>
+    [reserva.hora, reserva.cliente_nombre, telefono, reserva.servicio_nombre]
+      .forEach((value) => {
+        const cell = document.createElement('td');
+        cell.textContent = value || '';
+        tr.appendChild(cell);
+      });
 
-        <button class="action-btn" title="Restablecer a Pendiente" 
-          onclick="cambiarEstadoReserva(${idReserva}, 'pendiente')">
-          ⏳
-        </button>
+    const statusCell = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = `badge badge-${estadoLimpio}`;
+    badge.textContent = reserva.estado || 'pendiente';
+    statusCell.appendChild(badge);
+    tr.appendChild(statusCell);
 
-        <button class="action-btn" title="Marcar como Completada" 
-          onclick="cambiarEstadoReserva(${idReserva}, 'completada')">
-          ✅
-        </button>
+    const actionsCell = document.createElement('td');
+    const addAction = (label, title, handler, extraClass = '') => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `action-btn ${extraClass}`.trim();
+      button.title = title;
+      button.textContent = label;
+      button.addEventListener('click', handler);
+      actionsCell.appendChild(button);
+    };
 
-        <button class="action-btn delete" title="Cancelar Turno" 
-          onclick="if(confirm('¿Deseas cancelar esta reserva?')) cambiarEstadoReserva(${idReserva}, 'cancelada')">
-          ❌
-        </button>
-      </td>
-    `;
+    addAction('💬', 'Enviar WhatsApp', () => enviarWhatsApp(
+      telefono,
+      reserva.cliente_nombre,
+      reserva.fecha,
+      reserva.hora,
+      reserva.servicio_nombre
+    ));
+    addAction('⏳', 'Restablecer a Pendiente', () => cambiarEstadoReserva(reserva.reserva_id, 'pendiente'));
+    addAction('✅', 'Marcar como Completada', () => cambiarEstadoReserva(reserva.reserva_id, 'completada'));
+    addAction('❌', 'Cancelar Turno', () => {
+      if (window.confirm('¿Deseas cancelar esta reserva?')) {
+        cambiarEstadoReserva(reserva.reserva_id, 'cancelada');
+      }
+    }, 'delete');
+    tr.appendChild(actionsCell);
 
     tbody.appendChild(tr);
   });
@@ -515,4 +525,4 @@ function enviarWhatsApp(telefono, clienteNombre, fecha, hora, servicio) {
   window.open(url, '_blank');
 }
 
-lucide.createIcons();
+window.lucide?.createIcons();
