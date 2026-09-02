@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control | Agenda de Barbería</title>
 
-<script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="/src/admin/admin.css">
 </head>
 <body>
@@ -15,55 +14,118 @@
   </header>
 
   <main>
-
     <section>
       <div class="section-header">
         <h2>Agenda de Turnos</h2>
         <div class="filters-bar">
-          <div class="filter-group">
-            <label for="date-picker">Fecha:
-              <span id="selected-date-display" class="selected-date-btn">Cargando...</span>
-            </label>
-            <div class="calendar-container">
-              <div class="calendar">
-        
-                <div class="calendar-header">
+          <!-- Buscador en tiempo real -->
+          <div class="filter-group filter-search">
+            <label for="search-input">Buscar</label>
+            <div class="input-with-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input type="search" id="search-input" placeholder="Cliente, teléfono o servicio..." />
+            </div>
+          </div>
 
-                  <svg id="btnMesAnterior" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
-        
+          <!-- Filtro de Fecha (Calendario Popover Flotante) -->
+          <div class="filter-group date-filter-wrapper">
+            <label for="selected-date-display">Fecha:</label>
+            <button type="button" id="selected-date-display" class="selected-date-btn">
+              Todas las fechas
+            </button>
+
+            <!-- Popup Flotante del Calendario -->
+            <div id="calendarPopover" class="calendar-popover hidden">
+              <div class="calendar">
+                <div class="calendar-header">
+                  <svg id="btnMesAnterior" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="calendar-nav">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
                   <h4 id="calendarTitle">Septiembre 2026</h4>
-        
-                  <svg id="btnMesSiguiente" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                  <svg id="btnMesSiguiente" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="calendar-nav">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
                 </div>
-        
+
                 <div class="calendar-weekdays">
-                  <span>LUN</span>
-                  <span>MAR</span>
-                  <span>MIÉ</span>
-                  <span>JUE</span>
-                  <span>VIE</span>
-                  <span>SÁB</span>
+                  <span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span>
                 </div>
-        
+
                 <div class="calendar-days" id="calendarDays"></div>
               </div>
             </div>
           </div>
+
+          <!-- Filtro de Estado -->
           <div class="filter-group">
-            <label for="status-filter">Estado:</label>
-            <select id="status-filter">
+            <label for="status-filter">Estado</label>
+            <select id="status-filter" class="filter-select">
               <option value="todos">Todos los estados</option>
               <option value="pendiente">Pendientes</option>
               <option value="completada">Completados</option>
             </select>
           </div>
+
+          <!-- Filtro de Orden -->
+          <div class="filter-group">
+            <label for="order-filter">Orden</label>
+            <select id="order-filter" class="filter-select">
+              <option value="DESC" selected>Más recientes primero</option>
+              <option value="ASC">Más antiguas primero</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div class="table-container">
+      <!-- Estados de interfaz (Loading, Error, Empty) -->
+      <div id="loading-state" style="display: none; text-align: center; padding: 40px 20px;">
+        <div class="spinner"
+          style="display: inline-block; width: 32px; height: 32px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite;">
+        </div>
+        <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">Cargando reservas...</p>
+      </div>
+
+      <div id="error-state"
+        style="display: none; text-align: center; padding: 20px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin: 15px 0;">
+        <p style="color: #dc2626; font-weight: 500; margin-bottom: 8px;">Ocurrió un error al obtener las reservas.</p>
+        <button id="retry-btn"
+          style="padding: 6px 16px; background-color: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;">
+          Reintentar
+        </button>
+      </div>
+
+      <div id="empty-state"
+        style="display: none; text-align: center; padding: 40px 20px; border: 2px dashed #e5e7eb; border-radius: 8px; margin: 15px 0;">
+        <svg style="margin: 0 auto 10px auto; width: 40px; height: 40px; color: #9ca3af;" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 4px;">No se encontraron reservas</p>
+        <p style="font-size: 14px; color: #6b7280; margin: 0;">Intenta con otros términos de búsqueda o cambiando los filtros seleccionados.</p>
+      </div>
+
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+
+      <!-- Tabla Principal de Reservas -->
+      <div id="table-container" class="table-container">
         <table>
           <thead>
             <tr>
+              <th>Fecha</th>
               <th>Hora</th>
               <th>Cliente</th>
               <th>Teléfono</th>
@@ -73,11 +135,13 @@
             </tr>
           </thead>
           <tbody id="appointments-list">
+            <!-- Filas dinámicas generadas por dashboard.js -->
           </tbody>
         </table>
       </div>
     </section>
 
+    <!-- Métricas -->
     <section class="metrics-grid">
       <div class="metric-card">
         <h3>Pendientes</h3>

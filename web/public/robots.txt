@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Deshabilitar la indexación del panel de administración y endpoints de API
+Disallow: /admin/
+Disallow: /api/
+
+# Ubicación del mapa del sitio
+Sitemap: https://midominio.com/sitemap.xml

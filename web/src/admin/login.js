@@ -25,13 +25,22 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await fetch('/api/auth/login', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json' 
+          headers: {
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        // Lectura segura del cuerpo de la respuesta en formato texto
+        let data = {};
+        const textResponse = await response.text();
+        if (textResponse) {
+          try {
+            data = JSON.parse(textResponse);
+          } catch (jsonErr) {
+            console.error('Respuesta no JSON recibida del servidor:', textResponse);
+          }
+        }
 
         if (response.ok) {
           if (data.token) {
@@ -39,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           window.location.href = '/admin/dashboard.html';
         } else {
-          showError(data.message || 'Credenciales incorrectas');
+          // Mostrar mensaje devuelto por la API o el código de estado HTTP
+          showError(data.message || `Error del servidor (${response.status})`);
         }
       } catch (error) {
         console.error('Error durante el inicio de sesión:', error);

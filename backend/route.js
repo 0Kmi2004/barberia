@@ -40,6 +40,7 @@ function requireAdmin(req, res, next) {
  * Registers the application routes.
  * @param {*} app - The Express application instance.
  */
+console.log('🔥 SERVIDOR INICIADO EN EL PUERTO 3000 🔥');
 function registerRoutes(app) {
   /**
    * Handles user login requests.
@@ -51,12 +52,14 @@ function registerRoutes(app) {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
+      console.log('📌 Intento de login con:', { email, password });
       if (!email || !password) {
         return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
       }
 
       const sql = 'SELECT * FROM usuarios WHERE email = ?';
       const [usuarios] = await db.query(sql, [email]);
+      console.log('📌 Usuarios encontrados en BD:', usuarios.length);
       if (usuarios.length === 0) {
         return res.status(401).json({ message: 'Credenciales incorrectas' });
       }
@@ -241,7 +244,10 @@ function registerRoutes(app) {
    */
   app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
     try {
-      const { fecha, estado } = req.query;
+      const { fecha, estado, orden = 'DESC' } = req.query;
+
+      const direccion = orden.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
       let sql = `
         SELECT
           r.id AS reserva_id,
@@ -270,7 +276,8 @@ function registerRoutes(app) {
       if (whereClauses.length > 0) {
         sql += ` WHERE ${whereClauses.join(' AND ')}`;
       }
-      sql += ' ORDER BY r.fecha DESC, r.hora ASC';
+
+      sql += ` ORDER BY r.fecha ${direccion}, r.hora ${direccion}`;
 
       const [reservas] = await db.query(sql, params);
       return res.json(reservas);

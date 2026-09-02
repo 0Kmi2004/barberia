@@ -1,4 +1,16 @@
-window.lucide?.createIcons();
+
+// web/src/main.js
+import { createIcons, Calendar, Clock, Scissors, MapPin, User } from 'lucide';
+
+createIcons({
+  icons: {
+    Calendar,
+    Clock,
+    Scissors,
+    MapPin,
+    User
+  }
+});
 
 /* =================================
    MODALES - variables

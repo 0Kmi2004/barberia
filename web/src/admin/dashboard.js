@@ -1,6 +1,10 @@
+import { createIcons, icons } from 'lucide';
+
+createIcons({ icons });
+
 let fechasConPendientes = [];
 let fechaActualVisualizada = new Date(); // Para navegar meses
-let fechaSeleccionadaStr = new Date().toISOString().split('T')[0]; // Fecha en formato YYYY-MM-DD
+let fechaSeleccionadaStr = ''; // Por defecto vacía para cargar TODAS las reservas
 
 async function cargarFechasPendientes() {
   const token = localStorage.getItem('adminToken');
@@ -18,7 +22,7 @@ async function cargarFechasPendientes() {
 
 async function inicializarCalendario() {
   const dateDisplay = document.getElementById('selected-date-display');
-  const calendarContainer = document.querySelector('.calendar-container');
+  const calendarPopover = document.getElementById('calendarPopover');
 
   await cargarFechasPendientes();
 
@@ -41,20 +45,19 @@ async function inicializarCalendario() {
     });
   }
 
-  if (dateDisplay && calendarContainer) {
-    dateDisplay.style.cursor = 'pointer';
-    
+  // Manejo del evento de abrir/cerrar popover flotante
+  if (dateDisplay && calendarPopover) {
     dateDisplay.addEventListener('click', (e) => {
       e.stopPropagation();
-      calendarContainer.classList.toggle('active');
+      calendarPopover.classList.toggle('hidden');
     });
 
-    calendarContainer.addEventListener('click', (e) => {
+    calendarPopover.addEventListener('click', (e) => {
       e.stopPropagation();
     });
 
     document.addEventListener('click', () => {
-      calendarContainer.classList.remove('active');
+      calendarPopover.classList.add('hidden');
     });
   }
 
@@ -65,12 +68,17 @@ function renderizarCalendario() {
   const calendarDays = document.getElementById('calendarDays');
   const calendarTitle = document.getElementById('calendarTitle');
   const dateDisplay = document.getElementById('selected-date-display');
-  
+  const calendarPopover = document.getElementById('calendarPopover');
+
   if (!calendarDays || !calendarTitle) return;
 
-  if (dateDisplay && fechaSeleccionadaStr) {
-    const [anio, mes, dia] = fechaSeleccionadaStr.split('-');
-    dateDisplay.textContent = `${parseInt(dia)}/${parseInt(mes)}/${anio}`;
+  if (dateDisplay) {
+    if (fechaSeleccionadaStr) {
+      const [anio, mes, dia] = fechaSeleccionadaStr.split('-');
+      dateDisplay.textContent = `${parseInt(dia)}/${parseInt(mes)}/${anio}`;
+    } else {
+      dateDisplay.textContent = 'Todas las fechas';
+    }
   }
 
   calendarDays.innerHTML = '';
@@ -84,6 +92,17 @@ function renderizarCalendario() {
   const primerDiaSemana = new Date(anio, mes, 1).getDay();
   const offsetLunes = (primerDiaSemana + 6) % 7;
   const totalDiasMes = new Date(anio, mes + 1, 0).getDate();
+
+  // Opción para resetear el filtro a "Todas las fechas"
+  const clearOption = document.createElement('div');
+  clearOption.className = 'calendar-reset-btn';
+  clearOption.textContent = 'Ver todas las fechas';
+  clearOption.addEventListener('click', () => {
+    fechaSeleccionadaStr = '';
+    renderizarCalendario();
+    applyFilters();
+    if (calendarPopover) calendarPopover.classList.add('hidden');
+  });
 
   for (let i = 0; i < offsetLunes; i++) {
     const emptySpan = document.createElement('span');
@@ -113,14 +132,19 @@ function renderizarCalendario() {
       fechaSeleccionadaStr = fechaFormateada;
       renderizarCalendario();
       applyFilters();
-      
-      const calendarContainer = document.querySelector('.calendar-container');
-      if (calendarContainer) {
-        calendarContainer.classList.remove('active');
+
+      if (calendarPopover) {
+        calendarPopover.classList.add('hidden');
       }
     });
 
     calendarDays.appendChild(daySpan);
+  }
+
+  // Insertar botón de limpiar filtro al final del contenedor del calendario
+  const calendarContainer = calendarDays.closest('.calendar');
+  if (calendarContainer && !calendarContainer.querySelector('.calendar-reset-btn')) {
+    calendarContainer.appendChild(clearOption);
   }
 }
 
@@ -176,8 +200,8 @@ async function cambiarEstadoReserva(idReserva, nuevoEstado) {
     });
 
     if (response.ok) {
-      applyFilters();        
-      refrescarCalendario();  
+      applyFilters();
+      refrescarCalendario();
     } else {
       const data = await response.json();
       alert(data.message || 'Error al actualizar el estado.');
@@ -251,28 +275,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (statusFilter) {
       statusFilter.addEventListener('change', () => applyFilters());
     }
+
+    const orderFilter = document.getElementById('order-filter');
+    if (orderFilter) {
+      orderFilter.addEventListener('change', () => applyFilters());
+    }
+
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => applyFilters());
+    }
+
+    const retryBtn = document.getElementById('retry-btn');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => applyFilters());
+    }
   }
 });
 
 function applyFilters() {
   const statusFilter = document.getElementById('status-filter');
+  const searchInput = document.getElementById('search-input');
+  const orderFilter = document.getElementById('order-filter');
 
-  const fecha = fechaSeleccionadaStr;
+  const fecha = typeof fechaSeleccionadaStr !== 'undefined' ? fechaSeleccionadaStr : '';
   const estado = statusFilter ? statusFilter.value : 'todos';
+  const query = searchInput ? searchInput.value.trim() : '';
+  const orden = orderFilter ? orderFilter.value : 'DESC';
 
-  fetchAppointments(fecha, estado);
-  cargarMetricas();
+  fetchAppointments(fecha, estado, query, orden);
+  if (typeof cargarMetricas === 'function') {
+    cargarMetricas();
+  }
 }
 
-async function fetchAppointments(fecha = '', estado = 'todos') {
+async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden = 'DESC') {
   const token = localStorage.getItem('adminToken');
   const tbody = document.getElementById('appointments-list');
   if (!tbody) return;
+
+  mostrarEstado('loading');
 
   try {
     const params = new URLSearchParams();
     if (fecha) params.append('fecha', fecha);
     if (estado && estado !== 'todos') params.append('estado', estado);
+    if (orden) params.append('orden', orden);
 
     const url = `/api/admin/reservas?${params.toString()}`;
 
@@ -290,11 +338,64 @@ async function fetchAppointments(fecha = '', estado = 'todos') {
       throw new Error('Error al obtener las reservas');
     }
 
-    const reservas = await response.json();
-    renderTable(reservas);
+    let reservas = await response.json();
+
+    // Ordenamiento por fecha y hora
+    reservas.sort((a, b) => {
+      const fechaA = new Date(`${a.fecha}T${a.hora || '00:00'}`);
+      const fechaB = new Date(`${b.fecha}T${b.hora || '00:00'}`);
+      return orden === 'ASC' ? fechaA - fechaB : fechaB - fechaA;
+    });
+
+    // Filtro cliente por término de búsqueda (nombre, teléfono o servicio)
+    if (query) {
+      const q = query.toLowerCase();
+      reservas = reservas.filter(r => {
+        const nombre = (r.cliente_nombre || '').toLowerCase();
+        const tel = (r.cliente_telefono || r.telefono || '').toLowerCase();
+        const servicio = (r.servicio_nombre || '').toLowerCase();
+        return nombre.includes(q) || tel.includes(q) || servicio.includes(q);
+      });
+    }
+
+    // Manejo de Estado Vacío vs Tabla con datos
+    if (reservas.length === 0) {
+      mostrarEstado('empty');
+    } else {
+      mostrarEstado('success');
+      renderTable(reservas);
+    }
 
   } catch (error) {
     console.error('Error al cargar reservas:', error);
+    mostrarEstado('error');
+  }
+}
+
+function mostrarEstado(estado) {
+  const loadingState = document.getElementById('loading-state');
+  const errorState = document.getElementById('error-state');
+  const emptyState = document.getElementById('empty-state');
+  const tableContainer = document.getElementById('table-container') || document.getElementById('appointments-list');
+
+  if (loadingState) loadingState.style.display = 'none';
+  if (errorState) errorState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
+  if (tableContainer) tableContainer.style.display = 'none';
+
+  switch (estado) {
+    case 'loading':
+      if (loadingState) loadingState.style.display = 'block';
+      break;
+    case 'error':
+      if (errorState) errorState.style.display = 'block';
+      break;
+    case 'empty':
+      if (emptyState) emptyState.style.display = 'block';
+      break;
+    case 'success':
+      if (tableContainer) tableContainer.style.display = '';
+      break;
   }
 }
 
@@ -303,14 +404,33 @@ function renderTable(reservas) {
   if (!tbody) return;
   tbody.replaceChildren();
 
+  if (reservas.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 7;
+    td.style.textAlign = 'center';
+    td.style.padding = '24px';
+    td.style.color = '#6b7280';
+    td.textContent = 'No se encontraron reservas que coincidan con los filtros.';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
   reservas.forEach(reserva => {
     const tr = document.createElement('tr');
     const telefono = reserva.cliente_telefono || reserva.telefono || '';
     const estadoLimpio = reserva.estado ? reserva.estado.toLowerCase().trim() : 'pendiente';
 
+    let fechaFormateada = reserva.fecha || '';
+    if (fechaFormateada.includes('-')) {
+      const [y, m, d] = fechaFormateada.split('T')[0].split('-');
+      fechaFormateada = `${d}/${m}/${y}`;
+    }
+
     tr.className = `row-estado-${estadoLimpio}`;
 
-    [reserva.hora, reserva.cliente_nombre, telefono, reserva.servicio_nombre]
+    [fechaFormateada, reserva.hora, reserva.cliente_nombre, telefono, reserva.servicio_nombre]
       .forEach((value) => {
         const cell = document.createElement('td');
         cell.textContent = value || '';
@@ -361,7 +481,6 @@ function inyectarEstilosEstado() {
   const style = document.createElement('style');
   style.id = 'estado-styles';
   style.textContent = `
-    /* Badges */
     .badge {
       padding: 4px 8px;
       border-radius: 12px;
@@ -399,30 +518,6 @@ function inyectarEstilosEstado() {
       opacity: 0.7;
     }
 
-    /* Estilos del Calendario Desplegable */
-    .filter-group {
-      position: relative;
-    }
-
-    .calendar-container {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 100;
-      margin-top: 8px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      padding: 16px;
-      width: 280px;
-    }
-
-    .calendar-container.active {
-      display: block;
-    }
-
     .calendar-day {
       display: inline-flex;
       align-items: center;
@@ -435,7 +530,7 @@ function inyectarEstilosEstado() {
     }
 
     .calendar-day:hover:not(.empty) {
-      background-color: #f3f4f6;
+      background-color: #333333;
     }
 
     .calendar-day.selected {
@@ -458,6 +553,23 @@ function inyectarEstilosEstado() {
 
     .calendar-day.selected.has-pending::after {
       background-color: #ffffff;
+    }
+
+    .calendar-reset-btn {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-align: center;
+      background-color: #2a2a2a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #ffffff;
+      transition: background-color 0.2s;
+    }
+
+    .calendar-reset-btn:hover {
+      background-color: #3f3f46;
     }
   `;
   document.head.appendChild(style);
