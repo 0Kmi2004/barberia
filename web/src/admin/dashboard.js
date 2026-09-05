@@ -159,9 +159,14 @@ async function cargarMetricas() {
 
   try {
     const params = new URLSearchParams();
-    if (fecha) params.append('fecha', fecha);
 
-    const url = `/api/admin/metricas${params.toString() ? `?${params.toString()}` : ''}`;
+    if (fecha) {
+      params.append('fecha', fecha);
+    } else {
+      params.append('fecha', 'todas');
+    }
+
+    const url = `/api/admin/metricas?${params.toString()}`;
 
     const response = await fetch(url, {
       headers: {
@@ -177,7 +182,7 @@ async function cargarMetricas() {
     const pendingEl = document.getElementById('pending-count');
     const completedEl = document.getElementById('completed-count');
 
-    if (todayEl) todayEl.textContent = data.hoy ?? 0;
+    if (todayEl) todayEl.textContent = data.hoy ?? data.total ?? 0;
     if (pendingEl) pendingEl.textContent = data.pendientes ?? 0;
     if (completedEl) completedEl.textContent = data.completados ?? 0;
 

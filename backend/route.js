@@ -10,11 +10,24 @@ if (!JWT_SECRET) {
 }
 
 /**
+ * Helper para emitir logs en formato JSON estructurado respetando las reglas de observabilidad.
+ * @param {string} level - 'info' | 'warn' | 'error'
+ * @param {string} event - Nombre corto del evento
+ * @param {Object} details - Datos adjuntos (excluye deliberadamente PII, tokens y contraseñas)
+ */
+function logEvent(level, event, details = {}) {
+  console.log(
+    JSON.stringify({
+      level,
+      event,
+      timestamp: new Date().toISOString(),
+      ...details
+    })
+  );
+}
+
+/**
  * Middleware para requerir que el usuario sea administrador.
- * @param {*} req
- * @param {*} res
- * @param {*} next
- * @returns
  */
 function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -27,6 +40,7 @@ function requireAdmin(req, res, next) {
   try {
     const user = jwt.verify(token, JWT_SECRET);
     if (user.role !== 'admin') {
+      logEvent('warn', 'AUTH_FORBIDDEN_ACCESS', { userId: user.id, path: req.originalUrl });
       return res.status(403).json({ message: 'Permisos insuficientes' });
     }
     req.user = user;
@@ -40,27 +54,23 @@ function requireAdmin(req, res, next) {
  * Registers the application routes.
  * @param {*} app - The Express application instance.
  */
-console.log('🔥 SERVIDOR INICIADO EN EL PUERTO 3000 🔥');
 function registerRoutes(app) {
   /**
    * Handles user login requests.
-   * Validates the provided email and password, and returns a JWT token if successful.
-   * @param {*} req - The request object containing email and password in the body.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-      console.log('📌 Intento de login con:', { email, password });
+
       if (!email || !password) {
         return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
       }
 
       const sql = 'SELECT * FROM usuarios WHERE email = ?';
       const [usuarios] = await db.query(sql, [email]);
-      console.log('📌 Usuarios encontrados en BD:', usuarios.length);
+
       if (usuarios.length === 0) {
+        logEvent('warn', 'AUTH_LOGIN_FAILED', { reason: 'USER_NOT_FOUND' });
         return res.status(401).json({ message: 'Credenciales incorrectas' });
       }
 
@@ -68,6 +78,7 @@ function registerRoutes(app) {
       const passwordCoincide = await bcrypt.compare(password, usuario.password);
 
       if (!passwordCoincide) {
+        logEvent('warn', 'AUTH_LOGIN_FAILED', { userId: usuario.id, reason: 'INVALID_PASSWORD' });
         return res.status(401).json({ message: 'Credenciales incorrectas' });
       }
 
@@ -81,22 +92,22 @@ function registerRoutes(app) {
         { expiresIn: '8h' }
       );
 
+      // Evento de login sin registrar contraseñas, hashes ni JWT
+      logEvent('info', 'AUTH_LOGIN_SUCCESS', { userId: usuario.id, role: usuario.role });
+
       return res.status(200).json({
         ok: true,
         token,
         message: 'Inicio de sesión exitoso'
       });
     } catch (error) {
-      console.error('Error al procesar el login:', error);
+      logEvent('error', 'AUTH_LOGIN_ERROR', { error: error.message });
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   });
+
   /**
    * Handles requests to verify if the user is an admin.
-   * Requires a valid JWT token in the Authorization header.
-   * @param {*} req - The request object containing the Authorization header.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/api/admin/verify', requireAdmin, (req, res) => {
     res.status(200).json({
@@ -107,10 +118,6 @@ function registerRoutes(app) {
 
   /**
    * Handles health check requests.
-   * Returns a simple JSON response indicating the server is running.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/health', (req, res) => {
     res.json({ ok: true });
@@ -118,27 +125,19 @@ function registerRoutes(app) {
 
   /**
    * Handles requests to retrieve all available services.
-   * Queries the database for all services and returns them in JSON format.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/api/servicios', async (req, res) => {
     try {
       const [resultados] = await db.query('SELECT * FROM servicios');
       return res.json(resultados);
     } catch (error) {
-      console.error('Error al obtener servicios:', error);
+      logEvent('error', 'FETCH_SERVICIOS_ERROR', { error: error.message });
       return res.status(500).json({ error: 'Error al obtener los servicios' });
     }
   });
 
   /**
    * Handles requests to check availability for a specific date.
-   * Generates available time slots and checks against existing reservations.
-   * @param {*} req - The request object containing the date parameter.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/api/disponibilidad/:fecha', async (req, res) => {
     try {
@@ -152,7 +151,7 @@ function registerRoutes(app) {
       const sql = `
         SELECT TIME_FORMAT(hora, '%H:%i') AS hora
         FROM reservas
-        WHERE fecha = ?
+        WHERE fecha = ? AND estado != 'cancelada'
       `;
 
       const [resultados] = await db.query(sql, [fecha]);
@@ -164,18 +163,13 @@ function registerRoutes(app) {
 
       return res.json(horariosRespuesta);
     } catch (error) {
-      console.error('Error al consultar disponibilidad:', error);
+      logEvent('error', 'DISPONIBILIDAD_ERROR', { error: error.message });
       return res.status(500).json({ error: 'Error al consultar disponibilidad' });
     }
   });
 
   /**
    * Handles requests to retrieve distinct dates with pending reservations.
-   * Requires the user to be an admin.
-   * Queries the database for distinct dates where reservations are pending.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/api/admin/fechas-pendientes', requireAdmin, async (req, res) => {
     try {
@@ -187,32 +181,31 @@ function registerRoutes(app) {
       const [filas] = await db.query(sql);
       return res.json(filas.map((fila) => fila.fecha));
     } catch (error) {
+      logEvent('error', 'FECHAS_PENDIENTES_ERROR', { error: error.message });
       return res.status(500).json({ error: 'Error al obtener fechas con pendientes' });
     }
   });
 
   /**
    * Handles requests to create a new reservation.
-   * Inserts a new client and reservation into the database.
-   * @param {*} req - The request object containing reservation details in the body.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.post('/api/reservas', async (req, res) => {
     try {
       const { servicio, fecha, hora, cliente } = req.body;
+
       const queryCliente = `
         INSERT INTO clientes (nombre, telefono, email, observaciones)
         VALUES (?, ?, ?, ?)
       `;
       const valoresCliente = [
-        cliente.nombre || null,
-        cliente.telefono || null,
-        cliente.email || null,
-        cliente.notas || cliente.observaciones || null
+        cliente?.nombre || null,
+        cliente?.telefono || null,
+        cliente?.email || null,
+        cliente?.notas || cliente?.observaciones || null
       ];
 
       const [resCliente] = await db.query(queryCliente, valoresCliente);
+
       const queryReserva = `
         INSERT INTO reservas (servicio_id, cliente_id, fecha, hora)
         VALUES (?, ?, ?, ?)
@@ -224,28 +217,30 @@ function registerRoutes(app) {
         hora
       ]);
 
+      // Log que cumple con la regla de registrar sólo IDs (Sin datos personales)
+      logEvent('info', 'RESERVA_CREATED', {
+        reservaId: resReserva.insertId,
+        clienteId: resCliente.insertId,
+        servicioId: servicio
+      });
+
       return res.status(201).json({
         ok: true,
         idReserva: resReserva.insertId,
         idCliente: resCliente.insertId
       });
     } catch (error) {
-      console.error('Error al insertar en la base de datos:', error);
-      return res.status(500).json({ ok: false, error: error.message });
+      logEvent('error', 'CREATE_RESERVA_ERROR', { error: error.message });
+      return res.status(500).json({ ok: false, error: 'Error al procesar la reserva.' });
     }
   });
 
   /**
-   * Handles requests to retrieve all reservations.
-   * Requires the user to be an admin.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
+   * Handles requests to retrieve all reservations for admin.
    */
   app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
     try {
       const { fecha, estado, orden = 'DESC' } = req.query;
-
       const direccion = orden.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
       let sql = `
@@ -265,6 +260,7 @@ function registerRoutes(app) {
 
       const whereClauses = [];
       const params = [];
+
       if (fecha) {
         whereClauses.push('r.fecha = ?');
         params.push(fecha);
@@ -282,23 +278,20 @@ function registerRoutes(app) {
       const [reservas] = await db.query(sql, params);
       return res.json(reservas);
     } catch (error) {
-      console.error('Error al filtrar reservas:', error);
-      return res.status(401).json({ message: 'Sesión inválida o error en el servidor' });
+      logEvent('error', 'FETCH_RESERVAS_ADMIN_ERROR', { error: error.message });
+      return res.status(500).json({ message: 'Error al consultar las reservas.' });
     }
   });
 
   /**
    * Handles requests to update the status of a reservation.
-   * Requires the user to be an admin.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.patch('/api/admin/reservas/:id/estado', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { estado } = req.body;
       const estadosPermitidos = ['pendiente', 'confirmada', 'completada', 'cancelada'];
+
       if (!estadosPermitidos.includes(estado)) {
         return res.status(400).json({ message: 'Estado no válido.' });
       }
@@ -307,50 +300,56 @@ function registerRoutes(app) {
         'UPDATE reservas SET estado = ? WHERE id = ?',
         [estado, id]
       );
+
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Reserva no encontrada.' });
       }
+
+      // Log seguro referenciando únicamente el ID de la reserva
+      logEvent('info', 'RESERVA_STATUS_UPDATED', { reservaId: Number(id), newStatus: estado });
+
       return res.json({ message: `Turno marcado como ${estado} con éxito.` });
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
-      return res.status(500).json({ message: 'Error en el servidor o token inválido.' });
+      logEvent('error', 'UPDATE_RESERVA_STATUS_ERROR', { reservaId: req.params.id, error: error.message });
+      return res.status(500).json({ message: 'Error interno en el servidor.' });
     }
   });
 
   /**
    * Handles requests to retrieve admin metrics.
-   * Requires the user to be an admin.
-   * @param {*} req - The request object.
-   * @param {*} res - The response object used to send back the result.
-   * @returns {void}
    */
   app.get('/api/admin/metricas', requireAdmin, async (req, res) => {
     try {
-      const fecha = req.query.fecha || new Date().toISOString().split('T')[0];
-      const [turnosDia] = await db.query(
-        'SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND estado != "cancelada"',
-        [fecha]
-      );
-      const [pendientesDia] = await db.query(
-        'SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND estado = "pendiente"',
-        [fecha]
-      );
-      const [completadosDia] = await db.query(
-        'SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND estado = "completada"',
-        [fecha]
-      );
+      const fechaParam = req.query.fecha;
+      const esTodas = !fechaParam || fechaParam === 'todas';
+
+      let sqlHoy = 'SELECT COUNT(*) as total FROM reservas WHERE estado != "cancelada"';
+      let sqlPendientes = 'SELECT COUNT(*) as total FROM reservas WHERE estado = "pendiente"';
+      let sqlCompletados = 'SELECT COUNT(*) as total FROM reservas WHERE estado = "completada"';
+
+      const params = [];
+
+      if (!esTodas) {
+        sqlHoy += ' AND fecha = ?';
+        sqlPendientes += ' AND fecha = ?';
+        sqlCompletados += ' AND fecha = ?';
+        params.push(fechaParam);
+      }
+
+      const [turnosDia] = await db.query(sqlHoy, params);
+      const [pendientesDia] = await db.query(sqlPendientes, params);
+      const [completadosDia] = await db.query(sqlCompletados, params);
 
       return res.json({
-        hoy: turnosDia[0].total || 0,
-        pendientes: pendientesDia[0].total || 0,
-        completados: completadosDia[0].total || 0
+        hoy: turnosDia[0]?.total || 0,
+        pendientes: pendientesDia[0]?.total || 0,
+        completados: completadosDia[0]?.total || 0
       });
     } catch (error) {
-      console.error('Error al obtener métricas:', error);
+      logEvent('error', 'FETCH_METRICAS_ERROR', { error: error.message });
       return res.status(500).json({ message: 'Error interno del servidor.' });
     }
   });
 }
 
-// Export the registerRoutes function for use in other modules (e.g., apps.js).
 module.exports = registerRoutes;

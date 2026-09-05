@@ -4,19 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control | Agenda de Barbería</title>
-
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="/src/admin/admin.css">
 </head>
+
 <body>
   <header>
-    <div class="brand"><i data-lucide="scissors"></i> El Chueco</div>
+    <div class="brand"><i data-lucide="scissors"></i> El Tuerto</div>
     <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
   </header>
 
   <main>
-    <section>
+    <section class="turnos">
       <div class="section-header">
-        <h2>Agenda de Turnos</h2>
+        <h1>Agenda de Turnos</h1>
         <div class="filters-bar">
           <!-- Buscador en tiempo real -->
           <div class="filter-group filter-search">
@@ -85,7 +86,6 @@
         </div>
       </div>
 
-      <!-- Estados de interfaz (Loading, Error, Empty) -->
       <div id="loading-state" style="display: none; text-align: center; padding: 40px 20px;">
         <div class="spinner"
           style="display: inline-block; width: 32px; height: 32px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite;">
@@ -120,7 +120,6 @@
         }
       </style>
 
-      <!-- Tabla Principal de Reservas -->
       <div id="table-container" class="table-container">
         <table>
           <thead>
@@ -141,7 +140,6 @@
       </div>
     </section>
 
-    <!-- Métricas -->
     <section class="metrics-grid">
       <div class="metric-card">
         <h3>Pendientes</h3>

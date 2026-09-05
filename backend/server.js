@@ -1,45 +1,50 @@
 require('dotenv').config({ path: '../.env' });
 const app = require('./apps');
-const helmet = require('helmet');
 
 const PORT = Number(process.env.PORT) || 3000;
 
-// 1. Configuración de Headers de Seguridad
-app.use(
-  helmet({
-    frameguard: { action: 'deny' },
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    xssFilter: false,
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://unpkg.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-        imgSrc: ["'self'", "data:"],
-        fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-        mediaSrc: ["'self'"],
-        connectSrc: ["'self'"],
-        frameAncestors: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"]
-      }
-    }
-  })
-);
-
-// 2. Middleware personalizado para Permissions-Policy
-app.use((req, res, next) => {
-  res.setHeader(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
+/**
+ * Inicia el servidor de Express y maneja el ciclo de vida de la aplicación.
+ */
+const server = app.listen(PORT, () => {
+  console.log(
+    JSON.stringify({
+      level: 'info',
+      event: 'SERVER_STARTED',
+      timestamp: new Date().toISOString(),
+      port: PORT,
+      environment: process.env.NODE_ENV || 'development'
+    })
   );
-  next();
 });
 
 /**
- * Starts the Express server on the specified port.
+ * Cierre controlado de la aplicación (Graceful Shutdown)
+ * Cierra las conexiones activas antes de finalizar el proceso en producción.
  */
-//
-app.listen(PORT, () => {
-  console.log(`Servidor funcionando en http://localhost:${PORT}`);
-});
+const handleShutdown = (signal) => {
+  console.log(
+    JSON.stringify({
+      level: 'info',
+      event: 'SERVER_STOPPING',
+      timestamp: new Date().toISOString(),
+      signal
+    })
+  );
+
+  server.close(() => {
+    console.log(
+      JSON.stringify({
+        level: 'info',
+        event: 'SERVER_STOPPED',
+        timestamp: new Date().toISOString(),
+        message: 'Servidor detenido de forma limpia.'
+      })
+    );
+    process.exit(0);
+  });
+};
+
+// Escuchar señales de apagado del sistema o hosting (Render / Railway / Docker)
+process.on('SIGINT', () => handleShutdown('SIGINT'));
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));

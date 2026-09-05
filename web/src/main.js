@@ -1,6 +1,6 @@
 
 // web/src/main.js
-import { createIcons, Calendar, Clock, Scissors, MapPin, User } from 'lucide';
+import { createIcons, Calendar, Clock, Scissors, MapPin, User, Check, CircleDollarSign } from 'lucide';
 
 createIcons({
   icons: {
@@ -8,7 +8,9 @@ createIcons({
     Clock,
     Scissors,
     MapPin,
-    User
+    User,
+    Check,
+    CircleDollarSign
   }
 });
 

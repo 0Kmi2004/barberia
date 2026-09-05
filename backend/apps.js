@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
+const crypto = require('crypto');
+const path = require('path');
 const registerRoutes = require('./route');
 
 /**
@@ -10,7 +12,6 @@ const registerRoutes = require('./route');
  */
 const app = express();
 
-// 1. Configuración de Helmet (Cabeceras de seguridad)
 app.use(
   helmet({
     frameguard: { action: 'deny' },
@@ -33,7 +34,6 @@ app.use(
   })
 );
 
-// 2. Middleware para Permissions-Policy (deshabilita APIs no utilizadas)
 app.use((req, res, next) => {
   res.setHeader(
     'Permissions-Policy',
@@ -42,18 +42,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. Compresión Gzip para respuestas
 app.use(
   compression({
     filter: (req, res) => {
       if (req.headers['x-no-compression']) return false;
       return compression.filter(req, res);
     },
-    threshold: 1024 // Comprime únicamente respuestas mayores a 1 KB
+    threshold: 1024
   })
 );
 
-// 4. Deshabilitar la caché exclusivamente para rutas de la API
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -61,19 +59,27 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// 5. Middlewares base (CORS y Parseo de JSON)
 app.use(cors());
 app.use(express.json());
 
-// 6. Middleware de Observabilidad (Logs estructurados)
 app.use((req, res, next) => {
   const startedAt = Date.now();
+  req.requestId = crypto.randomUUID();
 
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
+    let logLevel = 'info';
+
+    if (res.statusCode >= 500) {
+      logLevel = 'error';
+    } else if (res.statusCode >= 400) {
+      logLevel = 'warn';
+    }
+
     console.log(
       JSON.stringify({
-        level: 'info',
+        level: logLevel,
+        requestId: req.requestId,
         method: req.method,
         path: req.originalUrl,
         status: res.statusCode,
@@ -85,8 +91,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// 7. Registrar rutas de la aplicación
 registerRoutes(app);
 
-// Export standard Express app configured
+const staticPath = path.join(__dirname, 'public');
+
+app.use(
+  express.static(staticPath, {
+    maxAge: '30d',
+    immutable: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      }
+    }
+  })
+);
+
 module.exports = app;
