@@ -1,5 +1,11 @@
 .env
+.env.*
+*.env
 backend/.env
+
+node_modules/
+**/node_modules/
+
+dist/
+build/
 .codex-log/
-web/node_modules/
-web/dist/
