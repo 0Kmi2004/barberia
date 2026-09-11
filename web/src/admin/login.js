@@ -23,15 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = passwordInput ? passwordInput.value : '';
 
       try {
+        const hostname = window.location.hostname;
+        const partesHost = hostname.split('.');
+        const subdominioActual = (partesHost.length > 1 && partesHost[0] !== 'localhost') ? partesHost[0] : 'demo';
+
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-tenant': subdominioActual
           },
           body: JSON.stringify({ email, password })
         });
 
-        // Lectura segura del cuerpo de la respuesta en formato texto
         let data = {};
         const textResponse = await response.text();
         if (textResponse) {
@@ -48,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           window.location.href = '/admin/dashboard.html';
         } else {
-          // Mostrar mensaje devuelto por la API o el código de estado HTTP
           showError(data.message || `Error del servidor (${response.status})`);
         }
       } catch (error) {

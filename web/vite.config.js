@@ -15,6 +15,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        demo: resolve(__dirname, 'demo/index.html'),
         adminLogin: resolve(__dirname, 'admin/index.html'),
         adminDashboard: resolve(__dirname, 'admin/dashboard.html'),
       },
@@ -27,7 +28,9 @@ export default defineConfig({
   },
 
   server: {
+    port: 5173,
     host: true,
+
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

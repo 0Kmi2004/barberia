@@ -26,9 +26,6 @@ function logEvent(level, event, details = {}) {
   );
 }
 
-/**
- * Middleware para requerir que el usuario sea administrador.
- */
 function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -37,12 +34,28 @@ function requireAdmin(req, res, next) {
     return res.status(401).json({ message: 'No autorizado' });
   }
 
+  if (!req.tenant?.id) {
+    return res.status(400).json({ message: 'Tenant no especificado' });
+  }
+
   try {
     const user = jwt.verify(token, JWT_SECRET);
+
     if (user.role !== 'admin') {
       logEvent('warn', 'AUTH_FORBIDDEN_ACCESS', { userId: user.id, path: req.originalUrl });
       return res.status(403).json({ message: 'Permisos insuficientes' });
     }
+
+    if (Number(user.barberia_id) !== Number(req.tenant.id)) {
+      logEvent('warn', 'AUTH_CROSS_TENANT_VIOLATION', {
+        userId: user.id,
+        userTenantId: user.barberia_id,
+        requestTenantId: req.tenant.id,
+        path: req.originalUrl
+      });
+      return res.status(403).json({ message: 'No tiene acceso a la barbería especificada.' });
+    }
+
     req.user = user;
     return next();
   } catch (_error) {
@@ -55,22 +68,90 @@ function requireAdmin(req, res, next) {
  * @param {*} app - The Express application instance.
  */
 function registerRoutes(app) {
-  /**
-   * Handles user login requests.
-   */
+
+  app.get('/api/barberia/configuracion', async (req, res) => {
+    try {
+      if (!req.tenant?.id) {
+        return res.status(400).json({ error: 'Tenant no especificado' });
+      }
+
+      const [barberias] = await db.query(
+        'SELECT * FROM barberias WHERE id = ? LIMIT 1',
+        [req.tenant.id]
+      );
+
+      const b = barberias[0] || {};
+
+      console.log('📋 Datos leídos de Aiven para tenant:', req.tenant.id, b);
+
+      let servicios = [];
+      try {
+        const [rows] = await db.query(
+          'SELECT id, nombre, descripcion, precio, activo FROM servicios WHERE barberia_id = ? AND activo = TRUE',
+          [req.tenant.id]
+        );
+        servicios = rows;
+      } catch (_e) {
+        servicios = [];
+      }
+
+      return res.json({
+        id: b.id,
+        subdominio: b.subdominio,
+        nombre: b.nombre,
+        logo_url: b.logo_url,
+        color_primario: b.color_primario,
+        activa: b.activa,
+
+        'l-barberiaNombre': b.nombre,
+        'l-logoUrl': b.logo_url,
+
+        'l-heroTitle': b.hero_titulo,
+        'l-heroSubtitle': b.hero_subtitulo,
+        'l-heroText' : b.hero_texto_rating,
+        'l-heroVideoText': b.hero_video_texto,
+        'l-heroVideo': b.hero_video_url,
+
+        'l-sobretituloAbout': b.about_sobretitulo,
+        'l-tituloAbout': b.about_titulo,
+        'l-textAbout': b.about_texto_1,
+        'l-textAbout2': b.about_texto_2,
+        'l-subtextAbout': b.about_cita,
+        'l-aboutImg': b.about_imagen_url,
+
+        'l-sobretituloServicios': b.servicios_sobretitulo,
+        'l-tituloServicios': b.servicios_titulo,
+        'l-textServicios': b.servicios_texto,
+
+        'l-textCta': b.cta_titulo,
+        'l-serviciosTable': servicios,
+
+      });
+
+    } catch (error) {
+      console.error('Error en /api/barberia/configuracion:', error);
+      logEvent('error', 'FETCH_CONFIGURACION_ERROR', { error: error.message, tenantId: req.tenant?.id });
+      return res.status(500).json({ error: 'Error al obtener la configuración de la barbería' });
+    }
+  });
+
   app.post('/api/auth/login', async (req, res) => {
     try {
+      if (!req.tenant?.id) {
+        return res.status(400).json({ message: 'Dominio o subdominio no válido' });
+      }
+
       const { email, password } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
       }
 
-      const sql = 'SELECT * FROM usuarios WHERE email = ?';
-      const [usuarios] = await db.query(sql, [email]);
+      const sql = 'SELECT * FROM usuarios WHERE email = ? AND barberia_id = ?';
+      const [usuarios] = await db.query(sql, [email, req.tenant.id]);
 
       if (usuarios.length === 0) {
-        logEvent('warn', 'AUTH_LOGIN_FAILED', { reason: 'USER_NOT_FOUND' });
+        logEvent('warn', 'AUTH_LOGIN_FAILED', { reason: 'USER_NOT_FOUND', tenantId: req.tenant.id });
         return res.status(401).json({ message: 'Credenciales incorrectas' });
       }
 
@@ -78,7 +159,7 @@ function registerRoutes(app) {
       const passwordCoincide = await bcrypt.compare(password, usuario.password);
 
       if (!passwordCoincide) {
-        logEvent('warn', 'AUTH_LOGIN_FAILED', { userId: usuario.id, reason: 'INVALID_PASSWORD' });
+        logEvent('warn', 'AUTH_LOGIN_FAILED', { userId: usuario.id, tenantId: req.tenant.id, reason: 'INVALID_PASSWORD' });
         return res.status(401).json({ message: 'Credenciales incorrectas' });
       }
 
@@ -86,14 +167,14 @@ function registerRoutes(app) {
         {
           id: usuario.id,
           email: usuario.email,
-          role: usuario.role
+          role: usuario.role,
+          barberia_id: usuario.barberia_id
         },
         JWT_SECRET,
         { expiresIn: '8h' }
       );
 
-      // Evento de login sin registrar contraseñas, hashes ni JWT
-      logEvent('info', 'AUTH_LOGIN_SUCCESS', { userId: usuario.id, role: usuario.role });
+      logEvent('info', 'AUTH_LOGIN_SUCCESS', { userId: usuario.id, role: usuario.role, tenantId: req.tenant.id });
 
       return res.status(200).json({
         ok: true,
@@ -101,46 +182,45 @@ function registerRoutes(app) {
         message: 'Inicio de sesión exitoso'
       });
     } catch (error) {
-      logEvent('error', 'AUTH_LOGIN_ERROR', { error: error.message });
+      logEvent('error', 'AUTH_LOGIN_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   });
 
-  /**
-   * Handles requests to verify if the user is an admin.
-   */
   app.get('/api/admin/verify', requireAdmin, (req, res) => {
     res.status(200).json({
       valid: true,
-      user: { id: req.user.id, email: req.user.email, role: req.user.role }
+      user: { id: req.user.id, email: req.user.email, role: req.user.role, barberia_id: req.user.barberia_id }
     });
   });
 
-  /**
-   * Handles health check requests.
-   */
   app.get('/health', (req, res) => {
     res.json({ ok: true });
   });
 
-  /**
-   * Handles requests to retrieve all available services.
-   */
   app.get('/api/servicios', async (req, res) => {
     try {
-      const [resultados] = await db.query('SELECT * FROM servicios');
+      if (!req.tenant?.id) {
+        return res.status(400).json({ error: 'Tenant no especificado' });
+      }
+
+      const [resultados] = await db.query(
+        'SELECT id, nombre, descripcion, precio, activo FROM servicios WHERE barberia_id = ? AND activo = TRUE',
+        [req.tenant.id]
+      );
       return res.json(resultados);
     } catch (error) {
-      logEvent('error', 'FETCH_SERVICIOS_ERROR', { error: error.message });
+      logEvent('error', 'FETCH_SERVICIOS_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ error: 'Error al obtener los servicios' });
     }
   });
 
-  /**
-   * Handles requests to check availability for a specific date.
-   */
   app.get('/api/disponibilidad/:fecha', async (req, res) => {
     try {
+      if (!req.tenant?.id) {
+        return res.status(400).json({ error: 'Tenant no especificado' });
+      }
+
       const fecha = req.params.fecha;
       const horarios = generarHorarios(fecha);
 
@@ -151,10 +231,10 @@ function registerRoutes(app) {
       const sql = `
         SELECT TIME_FORMAT(hora, '%H:%i') AS hora
         FROM reservas
-        WHERE fecha = ? AND estado != 'cancelada'
+        WHERE fecha = ? AND barberia_id = ? AND estado != 'cancelada'
       `;
 
-      const [resultados] = await db.query(sql, [fecha]);
+      const [resultados] = await db.query(sql, [fecha, req.tenant.id]);
       const horariosOcupados = resultados.map((reserva) => reserva.hora);
       const horariosRespuesta = horarios.map((horario) => ({
         hora: horario,
@@ -163,41 +243,41 @@ function registerRoutes(app) {
 
       return res.json(horariosRespuesta);
     } catch (error) {
-      logEvent('error', 'DISPONIBILIDAD_ERROR', { error: error.message });
+      logEvent('error', 'DISPONIBILIDAD_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ error: 'Error al consultar disponibilidad' });
     }
   });
 
-  /**
-   * Handles requests to retrieve distinct dates with pending reservations.
-   */
+
   app.get('/api/admin/fechas-pendientes', requireAdmin, async (req, res) => {
     try {
       const sql = `
         SELECT DISTINCT DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha
         FROM reservas
-        WHERE LOWER(estado) = 'pendiente'
+        WHERE LOWER(estado) = 'pendiente' AND barberia_id = ?
       `;
-      const [filas] = await db.query(sql);
+      const [filas] = await db.query(sql, [req.tenant.id]);
       return res.json(filas.map((fila) => fila.fecha));
     } catch (error) {
-      logEvent('error', 'FECHAS_PENDIENTES_ERROR', { error: error.message });
+      logEvent('error', 'FECHAS_PENDIENTES_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ error: 'Error al obtener fechas con pendientes' });
     }
   });
 
-  /**
-   * Handles requests to create a new reservation.
-   */
   app.post('/api/reservas', async (req, res) => {
     try {
+      if (!req.tenant?.id) {
+        return res.status(400).json({ error: 'Tenant no especificado' });
+      }
+
       const { servicio, fecha, hora, cliente } = req.body;
 
       const queryCliente = `
-        INSERT INTO clientes (nombre, telefono, email, observaciones)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO clientes (barberia_id, nombre, telefono, email, observaciones)
+        VALUES (?, ?, ?, ?, ?)
       `;
       const valoresCliente = [
+        req.tenant.id,
         cliente?.nombre || null,
         cliente?.telefono || null,
         cliente?.email || null,
@@ -207,18 +287,19 @@ function registerRoutes(app) {
       const [resCliente] = await db.query(queryCliente, valoresCliente);
 
       const queryReserva = `
-        INSERT INTO reservas (servicio_id, cliente_id, fecha, hora)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO reservas (barberia_id, servicio_id, cliente_id, fecha, hora)
+        VALUES (?, ?, ?, ?, ?)
       `;
       const [resReserva] = await db.query(queryReserva, [
+        req.tenant.id,
         servicio,
         resCliente.insertId,
         fecha,
         hora
       ]);
 
-      // Log que cumple con la regla de registrar sólo IDs (Sin datos personales)
       logEvent('info', 'RESERVA_CREATED', {
+        tenantId: req.tenant.id,
         reservaId: resReserva.insertId,
         clienteId: resCliente.insertId,
         servicioId: servicio
@@ -230,18 +311,16 @@ function registerRoutes(app) {
         idCliente: resCliente.insertId
       });
     } catch (error) {
-      logEvent('error', 'CREATE_RESERVA_ERROR', { error: error.message });
+      logEvent('error', 'CREATE_RESERVA_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ ok: false, error: 'Error al procesar la reserva.' });
     }
   });
 
-  /**
-   * Handles requests to retrieve all reservations for admin.
-   */
   app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
     try {
       const { fecha, estado, orden = 'DESC' } = req.query;
-      const direccion = orden.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+      const orderDir = String(orden).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
       let sql = `
         SELECT
@@ -256,36 +335,31 @@ function registerRoutes(app) {
         FROM reservas r
         INNER JOIN clientes c ON r.cliente_id = c.id
         INNER JOIN servicios s ON r.servicio_id = s.id
+        WHERE r.barberia_id = ?
       `;
 
-      const whereClauses = [];
-      const params = [];
+      const params = [req.tenant.id];
 
       if (fecha) {
-        whereClauses.push('r.fecha = ?');
+        sql += ' AND r.fecha = ?';
         params.push(fecha);
       }
       if (estado && estado !== 'todos') {
-        whereClauses.push('r.estado = ?');
+        sql += ' AND r.estado = ?';
         params.push(estado);
       }
-      if (whereClauses.length > 0) {
-        sql += ` WHERE ${whereClauses.join(' AND ')}`;
-      }
 
-      sql += ` ORDER BY r.fecha ${direccion}, r.hora ${direccion}`;
+      sql += ` ORDER BY r.fecha ${orderDir}, r.hora ${orderDir}`;
 
       const [reservas] = await db.query(sql, params);
       return res.json(reservas);
     } catch (error) {
-      logEvent('error', 'FETCH_RESERVAS_ADMIN_ERROR', { error: error.message });
+      logEvent('error', 'FETCH_RESERVAS_ADMIN_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ message: 'Error al consultar las reservas.' });
     }
   });
 
-  /**
-   * Handles requests to update the status of a reservation.
-   */
+
   app.patch('/api/admin/reservas/:id/estado', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -297,37 +371,41 @@ function registerRoutes(app) {
       }
 
       const [result] = await db.query(
-        'UPDATE reservas SET estado = ? WHERE id = ?',
-        [estado, id]
+        'UPDATE reservas SET estado = ? WHERE id = ? AND barberia_id = ?',
+        [estado, id, req.tenant.id]
       );
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Reserva no encontrada.' });
       }
 
-      // Log seguro referenciando únicamente el ID de la reserva
-      logEvent('info', 'RESERVA_STATUS_UPDATED', { reservaId: Number(id), newStatus: estado });
+      logEvent('info', 'RESERVA_STATUS_UPDATED', {
+        tenantId: req.tenant.id,
+        reservaId: Number(id),
+        newStatus: estado
+      });
 
       return res.json({ message: `Turno marcado como ${estado} con éxito.` });
     } catch (error) {
-      logEvent('error', 'UPDATE_RESERVA_STATUS_ERROR', { reservaId: req.params.id, error: error.message });
+      logEvent('error', 'UPDATE_RESERVA_STATUS_ERROR', {
+        tenantId: req.tenant?.id,
+        reservaId: req.params.id,
+        error: error.message
+      });
       return res.status(500).json({ message: 'Error interno en el servidor.' });
     }
   });
 
-  /**
-   * Handles requests to retrieve admin metrics.
-   */
   app.get('/api/admin/metricas', requireAdmin, async (req, res) => {
     try {
       const fechaParam = req.query.fecha;
       const esTodas = !fechaParam || fechaParam === 'todas';
 
-      let sqlHoy = 'SELECT COUNT(*) as total FROM reservas WHERE estado != "cancelada"';
-      let sqlPendientes = 'SELECT COUNT(*) as total FROM reservas WHERE estado = "pendiente"';
-      let sqlCompletados = 'SELECT COUNT(*) as total FROM reservas WHERE estado = "completada"';
+      let sqlHoy = "SELECT COUNT(*) as total FROM reservas WHERE barberia_id = ? AND estado != 'cancelada'";
+      let sqlPendientes = "SELECT COUNT(*) as total FROM reservas WHERE barberia_id = ? AND estado = 'pendiente'";
+      let sqlCompletados = "SELECT COUNT(*) as total FROM reservas WHERE barberia_id = ? AND estado = 'completada'";
 
-      const params = [];
+      const params = [req.tenant.id];
 
       if (!esTodas) {
         sqlHoy += ' AND fecha = ?';
@@ -346,10 +424,11 @@ function registerRoutes(app) {
         completados: completadosDia[0]?.total || 0
       });
     } catch (error) {
-      logEvent('error', 'FETCH_METRICAS_ERROR', { error: error.message });
+      logEvent('error', 'FETCH_METRICAS_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ message: 'Error interno del servidor.' });
     }
   });
+
 }
 
 module.exports = registerRoutes;

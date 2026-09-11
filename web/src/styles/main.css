@@ -2146,7 +2146,7 @@ gap: .1em;
 
   font-size: clamp(50px, 6vw, 90px);
 
-  line-height: 0.9;
+  line-height:  1.4;
 
 }
 
@@ -2155,7 +2155,7 @@ gap: .1em;
 .booking h2 span {
 
   color: var(--red);
-
+  font-style: oblique ;
 }
 
 .about-line {

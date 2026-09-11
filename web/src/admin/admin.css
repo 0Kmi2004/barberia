@@ -34,11 +34,18 @@
       align-items: center;
     }
 
-    .brand {
+    .brand{
+
+      display: flex;
+    }
+
+    .brand p{
       color: #ffc400;
       font-size: 1.2rem;
       font-weight: bold;
+      display: flex;
     }
+
 
 
     .btn-logout {

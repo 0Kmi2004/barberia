@@ -7,10 +7,9 @@ let fechaActualVisualizada = new Date(); // Para navegar meses
 let fechaSeleccionadaStr = ''; // Por defecto vacía para cargar TODAS las reservas
 
 async function cargarFechasPendientes() {
-  const token = localStorage.getItem('adminToken');
   try {
     const response = await fetch('/api/admin/fechas-pendientes', {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     if (response.ok) {
       fechasConPendientes = await response.json();
@@ -148,13 +147,25 @@ function renderizarCalendario() {
   }
 }
 
+async function cargarNombreBarberia() {
+  const brandEl = document.getElementById('barber-name');
+  if (!brandEl) return;
+
+  // Detectamos el nombre de forma dinámica según el subdominio actual o usamos "El Galpón" por defecto
+  const hostname = window.location.hostname;
+  if (hostname.includes('elgalpon')) {
+    brandEl.textContent = 'El Galpón';
+  } else {
+    brandEl.textContent = 'Barbería Admin';
+  }
+}
+
 async function refrescarCalendario() {
   await cargarFechasPendientes();
   renderizarCalendario();
 }
 
 async function cargarMetricas() {
-  const token = localStorage.getItem('adminToken');
   const fecha = fechaSeleccionadaStr;
 
   try {
@@ -169,9 +180,7 @@ async function cargarMetricas() {
     const url = `/api/admin/metricas?${params.toString()}`;
 
     const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: getAuthHeaders()
     });
 
     if (!response.ok) return;
@@ -187,20 +196,15 @@ async function cargarMetricas() {
     if (completedEl) completedEl.textContent = data.completados ?? 0;
 
   } catch (error) {
-    console.error('Error al cargar métricas:', error);
+    // Error silencioso controlado
   }
 }
 
 async function cambiarEstadoReserva(idReserva, nuevoEstado) {
-  const token = localStorage.getItem('adminToken');
-
   try {
     const response = await fetch(`/api/admin/reservas/${idReserva}/estado`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ estado: nuevoEstado })
     });
 
@@ -232,19 +236,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
 
-      const email = emailInput ? emailInput.value : '';
+      const email = emailInput ? emailInput.value.trim() : '';
       const password = passwordInput ? passwordInput.value : '';
 
       try {
+        const hostname = window.location.hostname;
+        const partesHost = hostname.split('.');
+        const subdominioActual = (partesHost.length > 1 && partesHost[0] !== 'localhost') ? partesHost[0] : 'demo';
+
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-tenant': subdominioActual
           },
           body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        let data = {};
+        const textResponse = await response.text();
+        if (textResponse) {
+          try {
+            data = JSON.parse(textResponse);
+          } catch (jsonErr) {
+            console.error('Respuesta no JSON recibida del servidor:', textResponse);
+          }
+        }
 
         if (response.ok) {
           if (data.token) {
@@ -272,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await protectAdminRoute();
     setupLogout();
 
+    await cargarNombreBarberia();
     await inicializarCalendario();
 
     applyFilters();
@@ -315,7 +333,6 @@ function applyFilters() {
 }
 
 async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden = 'DESC') {
-  const token = localStorage.getItem('adminToken');
   const tbody = document.getElementById('appointments-list');
   if (!tbody) return;
 
@@ -330,13 +347,11 @@ async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden
     const url = `/api/admin/reservas?${params.toString()}`;
 
     const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: getAuthHeaders()
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('adminToken');
         redirectToLogin();
       }
@@ -591,10 +606,7 @@ async function protectAdminRoute() {
   try {
     const response = await fetch('/api/admin/reservas', {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+      headers: getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -606,6 +618,20 @@ async function protectAdminRoute() {
     localStorage.removeItem('adminToken');
     redirectToLogin();
   }
+}
+
+// Función auxiliar unificada para incluir token y subdominio actual (tenant)
+function getAuthHeaders() {
+  const token = localStorage.getItem('adminToken');
+  const hostname = window.location.hostname;
+  const partesHost = hostname.split('.');
+  const subdominioActual = (partesHost.length > 1 && partesHost[0] !== 'localhost') ? partesHost[0] : 'demo';
+
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    'x-tenant': subdominioActual
+  };
 }
 
 function redirectToLogin() {
