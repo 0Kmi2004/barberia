@@ -282,6 +282,41 @@ function renderizarServiciosModal(servicios) {
   contenedorModal.innerHTML = htmlModalCards;
 }
 
+function restaurarServicioSeleccionado() {
+  if (!servicioSeleccionado) return;
+  const cards = document.querySelectorAll(".modal-service-card");
+  cards.forEach(card => {
+    const radio = card.querySelector('input[type="radio"]');
+    if (radio && radio.value === servicioSeleccionado) {
+      radio.checked = true;
+      card.classList.add("selected");
+    } else {
+      if (radio) radio.checked = false;
+      card.classList.remove("selected");
+    }
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".modal-service-card");
+  if (!card) return;
+
+  // Buscar el radio button dentro de la tarjeta presionada
+  const radio = card.querySelector('input[type="radio"]');
+  if (radio) {
+    radio.checked = true;
+
+    // Disparar manualmente el evento 'change' para que se actualicen las variables globales
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Actualizar las clases visuales de selección en las tarjetas
+    document.querySelectorAll(".modal-service-card").forEach(c => {
+      c.classList.remove("selected");
+    });
+    card.classList.add("selected");
+  }
+});
+
 /* =================================
    CALENDARIO
 ================================= */
@@ -438,26 +473,6 @@ async function cargarHorarios(fecha) {
   }
 }
 
-document.addEventListener("click", (e) => {
-  const card = e.target.closest(".modal-service-card");
-  if (!card) return;
-
-  // Buscar el radio button dentro de la tarjeta presionada
-  const radio = card.querySelector('input[type="radio"]');
-  if (radio) {
-    radio.checked = true;
-
-    // Disparar manualmente el evento 'change' para que se actualicen las variables globales
-    radio.dispatchEvent(new Event('change', { bubbles: true }));
-
-    // Actualizar las clases visuales de selección en las tarjetas
-    document.querySelectorAll(".modal-service-card").forEach(c => {
-      c.classList.remove("selected");
-    });
-    card.classList.add("selected");
-  }
-});
-
 function actualizarTextoFechaPaso3() {
   if (!fechaSeleccionada || !selectedDateHeader) return;
 
@@ -475,70 +490,8 @@ function actualizarTextoFechaPaso3() {
 }
 
 /* =================================
-   MODALES Y WIZARD CONTROL
+   CONFIRMACIÓN
 ================================= */
-function resetWizard() {
-  if (paso1) paso1.classList.add("active");
-  if (paso2) paso2.classList.remove("active");
-  if (paso3) paso3.classList.remove("active");
-  if (paso4) paso4.classList.remove("active");
-  if (paso5) paso5.classList.remove("active");
-  if (paso6) paso6.classList.remove("active");
-
-  if (steps.length >= 4) {
-    steps[0].classList.add("active");
-    steps[1].classList.remove("active");
-    steps[2].classList.remove("active");
-    steps[3].classList.remove("active");
-  }
-
-  if (stepper) stepper.classList.remove("hidden");
-
-  servicioSeleccionado = null;
-  document.querySelectorAll(".modal-service-card").forEach(card => {
-    card.classList.remove("selected");
-    const radio = card.querySelector('input[type="radio"]');
-    if (radio) radio.checked = false;
-  });
-
-  fechaSeleccionada = null;
-  horaSeleccionada = null;
-
-  document.querySelectorAll(".calendar-day").forEach(day => {
-    day.classList.remove("selected");
-  });
-
-  if (timeGrid) timeGrid.innerHTML = "";
-}
-
-function abrirModal() {
-  if (!modal) return;
-  if (!modal.classList.contains("active")) {
-    resetWizard();
-  }
-
-  modal.classList.add("active");
-  if (confirmHeader) confirmHeader.classList.add("hidden");
-  if (confirmTwoHeader) confirmTwoHeader.classList.add("hidden");
-}
-
-
-
-function restaurarServicioSeleccionado() {
-  if (!servicioSeleccionado) return;
-  const cards = document.querySelectorAll(".modal-service-card");
-  cards.forEach(card => {
-    const radio = card.querySelector('input[type="radio"]');
-    if (radio && radio.value === servicioSeleccionado) {
-      radio.checked = true;
-      card.classList.add("selected");
-    } else {
-      if (radio) radio.checked = false;
-      card.classList.remove("selected");
-    }
-  });
-}
-
 function validarFormulario() {
   if (!inputNombre || !inputEmail || !inputTelefono) return false;
 
@@ -615,6 +568,54 @@ function mostrarResumenReserva() {
   } else if (rowObs) {
     rowObs.style.display = "none";
   }
+}
+
+/* =================================
+   MODALES Y WIZARD CONTROL
+================================= */
+function resetWizard() {
+  if (paso1) paso1.classList.add("active");
+  if (paso2) paso2.classList.remove("active");
+  if (paso3) paso3.classList.remove("active");
+  if (paso4) paso4.classList.remove("active");
+  if (paso5) paso5.classList.remove("active");
+  if (paso6) paso6.classList.remove("active");
+
+  if (steps.length >= 4) {
+    steps[0].classList.add("active");
+    steps[1].classList.remove("active");
+    steps[2].classList.remove("active");
+    steps[3].classList.remove("active");
+  }
+
+  if (stepper) stepper.classList.remove("hidden");
+
+  servicioSeleccionado = null;
+  document.querySelectorAll(".modal-service-card").forEach(card => {
+    card.classList.remove("selected");
+    const radio = card.querySelector('input[type="radio"]');
+    if (radio) radio.checked = false;
+  });
+
+  fechaSeleccionada = null;
+  horaSeleccionada = null;
+
+  document.querySelectorAll(".calendar-day").forEach(day => {
+    day.classList.remove("selected");
+  });
+
+  if (timeGrid) timeGrid.innerHTML = "";
+}
+
+function abrirModal() {
+  if (!modal) return;
+  if (!modal.classList.contains("active")) {
+    resetWizard();
+  }
+
+  modal.classList.add("active");
+  if (confirmHeader) confirmHeader.classList.add("hidden");
+  if (confirmTwoHeader) confirmTwoHeader.classList.add("hidden");
 }
 
 /* =================================

@@ -160,6 +160,24 @@ async function cargarNombreBarberia() {
   }
 }
 
+async function cargarDatosAdmin() {
+  try {
+    const headers = getAuthHeaders();
+
+    const resBarberos = await fetch('/api/admin/barberos', { headers });
+    if (!resBarberos.ok) throw new Error('Error al obtener barberos');
+    const barberosDisponibles = await resBarberos.json();
+
+    const resReservas = await fetch('/api/admin/reservas', { headers });
+    if (!resReservas.ok) throw new Error('Error al obtener reservas');
+    const reservas = await resReservas.json();
+    renderTable(reservas, barberosDisponibles);
+
+  } catch (error) {
+    console.error("Error al cargar el panel:", error);
+  }
+}
+
 async function refrescarCalendario() {
   await cargarFechasPendientes();
   renderizarCalendario();
@@ -293,6 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await inicializarCalendario();
 
     applyFilters();
+    cargarDatosAdmin();
 
     const statusFilter = document.getElementById('status-filter');
     if (statusFilter) {
@@ -344,46 +363,55 @@ async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden
     if (estado && estado !== 'todos') params.append('estado', estado);
     if (orden) params.append('orden', orden);
 
+    // ¡CORRECCIÓN 1!: Añadimos el parámetro query para que viaje al backend
+    if (query && query.trim() !== '') {
+      params.append('query', query.trim());
+    }
+
     const url = `/api/admin/reservas?${params.toString()}`;
 
-    const response = await fetch(url, {
-      headers: getAuthHeaders()
-    });
+    const [responseReservas, responseBarberos] = await Promise.all([
+      fetch(url, { headers: getAuthHeaders() }),
+      fetch('/api/admin/barberos', { headers: getAuthHeaders() })
+    ]);
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
+    if (!responseReservas.ok || !responseBarberos.ok) {
+      if (responseReservas.status === 401 || responseReservas.status === 403 ||
+          responseBarberos.status === 401 || responseBarberos.status === 403) {
         localStorage.removeItem('adminToken');
         redirectToLogin();
       }
-      throw new Error('Error al obtener las reservas');
+      throw new Error('Error al obtener los datos del panel');
     }
 
-    let reservas = await response.json();
+    let reservas = await responseReservas.json();
+    const barberosDisponibles = await responseBarberos.json();
 
-    // Ordenamiento por fecha y hora
     reservas.sort((a, b) => {
       const fechaA = new Date(`${a.fecha}T${a.hora || '00:00'}`);
       const fechaB = new Date(`${b.fecha}T${b.hora || '00:00'}`);
       return orden === 'ASC' ? fechaA - fechaB : fechaB - fechaA;
     });
 
-    // Filtro cliente por término de búsqueda (nombre, teléfono o servicio)
     if (query) {
       const q = query.toLowerCase();
       reservas = reservas.filter(r => {
         const nombre = (r.cliente_nombre || '').toLowerCase();
         const tel = (r.cliente_telefono || r.telefono || '').toLowerCase();
         const servicio = (r.servicio_nombre || '').toLowerCase();
-        return nombre.includes(q) || tel.includes(q) || servicio.includes(q);
+
+        // ¡CORRECCIÓN 2!: Incluimos el nombre del barbero en el filtro local del cliente
+        const barbero = (r.barbero_nombre || '').toLowerCase();
+
+        return nombre.includes(q) || tel.includes(q) || servicio.includes(q) || barbero.includes(q);
       });
     }
 
-    // Manejo de Estado Vacío vs Tabla con datos
     if (reservas.length === 0) {
       mostrarEstado('empty');
     } else {
       mostrarEstado('success');
-      renderTable(reservas);
+      renderTable(reservas, barberosDisponibles);
     }
 
   } catch (error) {
@@ -419,7 +447,7 @@ function mostrarEstado(estado) {
   }
 }
 
-function renderTable(reservas) {
+function renderTable(reservas, barberosDisponibles = []) {
   const tbody = document.getElementById('appointments-list');
   if (!tbody) return;
   tbody.replaceChildren();
@@ -427,7 +455,7 @@ function renderTable(reservas) {
   if (reservas.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 7;
+    td.colSpan = 8; // Actualizado a 8 columnas totales
     td.style.textAlign = 'center';
     td.style.padding = '24px';
     td.style.color = '#6b7280';
@@ -438,24 +466,98 @@ function renderTable(reservas) {
   }
 
   reservas.forEach(reserva => {
-    const tr = document.createElement('tr');
-    const telefono = reserva.cliente_telefono || reserva.telefono || '';
-    const estadoLimpio = reserva.estado ? reserva.estado.toLowerCase().trim() : 'pendiente';
+      const tr = document.createElement('tr');
+      const telefono = reserva.cliente_telefono || reserva.telefono || '';
+      const estadoLimpio = reserva.estado ? reserva.estado.toLowerCase().trim() : 'pendiente';
+      const reservaId = reserva.reserva_id || reserva.id;
 
-    let fechaFormateada = reserva.fecha || '';
-    if (fechaFormateada.includes('-')) {
-      const [y, m, d] = fechaFormateada.split('T')[0].split('-');
-      fechaFormateada = `${d}/${m}/${y}`;
-    }
+      let fechaFormateada = reserva.fecha || '';
+      if (fechaFormateada.includes('-')) {
+        const [y, m, d] = fechaFormateada.split('T')[0].split('-');
+        fechaFormateada = `${d}/${m}/${y}`;
+      }
 
-    tr.className = `row-estado-${estadoLimpio}`;
+      tr.className = `row-estado-${estadoLimpio}`;
 
-    [fechaFormateada, reserva.hora, reserva.cliente_nombre, telefono, reserva.servicio_nombre]
-      .forEach((value) => {
-        const cell = document.createElement('td');
-        cell.textContent = value || '';
-        tr.appendChild(cell);
+      [fechaFormateada, reserva.hora, reserva.cliente_nombre, telefono, reserva.servicio_nombre]
+        .forEach((value) => {
+          const cell = document.createElement('td');
+          cell.textContent = value || '';
+          tr.appendChild(cell);
+        });
+
+      const barberCell = document.createElement('td');
+      const selectBarbero = document.createElement('select');
+      selectBarbero.className = 'barbero-select';
+
+      selectBarbero.setAttribute('data-id', reservaId);
+      selectBarbero.style.cssText = 'padding: 4px 8px; border-radius: 4px; border: 1px solid #d1d5db; background: #2a2a2a; color: #fff; font-size: 13px;';
+
+      // 1. Descubrir qué barberos ya están ocupados en esta misma fecha y hora exacta
+      const barberosOcupadosEnHorario = reservas
+        .filter(r => {
+          const rId = r.reserva_id || r.id;
+          return r.fecha === reserva.fecha &&
+                 r.hora === reserva.hora &&
+                 rId !== reservaId &&
+                 r.barbero_id !== null &&
+                 r.barbero_id !== undefined;
+        })
+        .map(r => Number(r.barbero_id));
+
+      const sinAsignarSelected = (!reserva.barbero_id) ? 'selected' : '';
+      let barberosOptions = `<option value="" ${sinAsignarSelected}>-- Sin asignar --</option>`;
+
+      barberosDisponibles.forEach(barbero => {
+        const barberoIdNum = Number(barbero.id);
+        const selected = (Number(reserva.barbero_id) === barberoIdNum) ? 'selected' : '';
+
+        const isOcupado = barberosOcupadosEnHorario.includes(barberoIdNum);
+        const disabledAttr = isOcupado ? 'disabled style="color: #71717a;"' : '';
+
+        barberosOptions += `
+          <option value="${barbero.id}" ${selected} ${disabledAttr}>
+            ${barbero.nombre}
+          </option>
+        `;
       });
+      selectBarbero.innerHTML = barberosOptions;
+
+      selectBarbero.addEventListener('change', async (e) => {
+        const idReserva = e.target.getAttribute('data-id');
+        const nuevoBarberoId = e.target.value ? Number(e.target.value) : null;
+
+        selectBarbero.disabled = true;
+
+        try {
+          const response = await fetch(`/api/admin/reservas/${idReserva}/barbero`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ barbero_id: nuevoBarberoId })
+          });
+
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Error al actualizar');
+
+          e.target.style.borderColor = '#10b981';
+          setTimeout(() => {
+            e.target.style.borderColor = '#d1d5db';
+          }, 1500);
+
+          // Actualizar el estado localmente para reflejar los cambios al instante
+          reserva.barbero_id = nuevoBarberoId;
+
+        } catch (error) {
+          console.error(error);
+          alert('No se pudo asignar el barbero. Inténtalo de nuevo.');
+        } finally {
+          selectBarbero.disabled = false;
+        }
+      });
+
+
+    barberCell.appendChild(selectBarbero);
+    tr.appendChild(barberCell);
 
     const statusCell = document.createElement('td');
     const badge = document.createElement('span');
@@ -482,15 +584,15 @@ function renderTable(reservas) {
       reserva.hora,
       reserva.servicio_nombre
     ));
-    addAction('⏳', 'Restablecer a Pendiente', () => cambiarEstadoReserva(reserva.reserva_id, 'pendiente'));
-    addAction('✅', 'Marcar como Completada', () => cambiarEstadoReserva(reserva.reserva_id, 'completada'));
+    addAction('⏳', 'Restablecer a Pendiente', () => cambiarEstadoReserva(reservaId, 'pendiente'));
+    addAction('✅', 'Marcar como Completada', () => cambiarEstadoReserva(reservaId, 'completada'));
     addAction('❌', 'Cancelar Turno', () => {
       if (window.confirm('¿Deseas cancelar esta reserva?')) {
-        cambiarEstadoReserva(reserva.reserva_id, 'cancelada');
+        cambiarEstadoReserva(reservaId, 'cancelada');
       }
     }, 'delete');
-    tr.appendChild(actionsCell);
 
+    tr.appendChild(actionsCell);
     tbody.appendChild(tr);
   });
 }

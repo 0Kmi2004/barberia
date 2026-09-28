@@ -46,7 +46,10 @@
       display: flex;
     }
 
-
+    .barbero-select{
+      background-color: none;
+      color: #c21111;
+    }
 
     .btn-logout {
       background: transparent;

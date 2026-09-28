@@ -10,10 +10,7 @@ if (!JWT_SECRET) {
 }
 
 /**
- * Helper para emitir logs en formato JSON estructurado respetando las reglas de observabilidad.
- * @param {string} level - 'info' | 'warn' | 'error'
- * @param {string} event - Nombre corto del evento
- * @param {Object} details - Datos adjuntos (excluye deliberadamente PII, tokens y contraseñas)
+ * función transversal que alimenta los logs de Node.js y, por ende, los registros de PM2 en tu VPS de Hostinger.
  */
 function logEvent(level, event, details = {}) {
   console.log(
@@ -26,6 +23,9 @@ function logEvent(level, event, details = {}) {
   );
 }
 
+/**
+ * verifica el rol del administrador y tenant.
+ */
 function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -63,12 +63,11 @@ function requireAdmin(req, res, next) {
   }
 }
 
-/**
- * Registers the application routes.
- * @param {*} app - The Express application instance.
- */
 function registerRoutes(app) {
 
+  /**
+   * consulta la configuracion estetica de la barbería.
+   */
   app.get('/api/barberia/configuracion', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -135,6 +134,9 @@ function registerRoutes(app) {
     }
   });
 
+  /**
+   * se coneta con la tabla usuarios para validar contraseña y generar un token JWT para el usuario.
+   */
   app.post('/api/auth/login', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -187,6 +189,9 @@ function registerRoutes(app) {
     }
   });
 
+  /**
+   * valida el token JWT con el middleware requireAdmin
+   */
   app.get('/api/admin/verify', requireAdmin, (req, res) => {
     res.status(200).json({
       valid: true,
@@ -194,10 +199,16 @@ function registerRoutes(app) {
     });
   });
 
+  /**
+   * confirma el backend este online
+   */
   app.get('/health', (req, res) => {
     res.json({ ok: true });
   });
 
+  /**
+   * filtra los servicios segun el tenant
+   */
   app.get('/api/servicios', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -215,6 +226,9 @@ function registerRoutes(app) {
     }
   });
 
+  /**
+   * calcula qué bloques horarios están libres u ocupados en el día seleccionado.
+   */
   app.get('/api/disponibilidad/:fecha', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -228,18 +242,41 @@ function registerRoutes(app) {
         return res.json([]);
       }
 
+      // 1. Obtener el total de barberos activos del tenant actual
+      const [rowsBarberos] = await db.query(
+        'SELECT COUNT(*) AS total_barberos FROM barberos WHERE barberia_id = ? AND activo = 1',
+        [req.tenant.id]
+      );
+      const totalBarberos = rowsBarberos[0].total_barberos;
+
+      // Si por alguna razón no hay barberos configurados, establecemos un mínimo de 1 para evitar errores de división o lógica
+      const capacidadMax = totalBarberos > 0 ? totalBarberos : 1;
+
+      // 2. Contar cuántos turnos ocupados existen agrupados por hora para esa fecha
       const sql = `
-        SELECT TIME_FORMAT(hora, '%H:%i') AS hora
+        SELECT TIME_FORMAT(hora, '%H:%i') AS hora_str, COUNT(*) AS total_ocupados
         FROM reservas
         WHERE fecha = ? AND barberia_id = ? AND estado != 'cancelada'
+        GROUP BY hora
       `;
 
       const [resultados] = await db.query(sql, [fecha, req.tenant.id]);
-      const horariosOcupados = resultados.map((reserva) => reserva.hora);
-      const horariosRespuesta = horarios.map((horario) => ({
-        hora: horario,
-        disponible: !horariosOcupados.includes(horario)
-      }));
+
+      // Creamos un mapa rápido para consultar el conteo por cada hora (ej: { '15:00': 2 })
+      const mapaOcupados = {};
+      resultados.forEach((row) => {
+        mapaOcupados[row.hora_str] = row.total_ocupados;
+      });
+
+      // 3. Mapear los horarios evaluando si la cantidad de ocupados es menor a la capacidad máxima
+      const horariosRespuesta = horarios.map((horario) => {
+        const ocupadosEnEstaHora = mapaOcupados[horario] || 0;
+
+        return {
+          hora: horario,
+          disponible: ocupadosEnEstaHora < capacidadMax
+        };
+      });
 
       return res.json(horariosRespuesta);
     } catch (error) {
@@ -248,7 +285,9 @@ function registerRoutes(app) {
     }
   });
 
-
+  /**
+   * consulta las fechas que tienen reservas pendientes para el administrador.
+   */
   app.get('/api/admin/fechas-pendientes', requireAdmin, async (req, res) => {
     try {
       const sql = `
@@ -264,33 +303,72 @@ function registerRoutes(app) {
     }
   });
 
+  /**
+   * crea la reserva registrando los datos en las tablas clientes y reservas.
+   */
   app.post('/api/reservas', async (req, res) => {
+    if (!req.tenant?.id) {
+      return res.status(400).json({ error: 'Tenant no especificado' });
+    }
+
+    const { servicio, fecha, hora, cliente } = req.body;
+
+    if (!servicio || !fecha || !hora || !cliente) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios para la reserva.' });
+    }
+
+    const conexion = await db.getConnection();
+
     try {
-      if (!req.tenant?.id) {
-        return res.status(400).json({ error: 'Tenant no especificado' });
+      await conexion.beginTransaction();
+
+      // 1. Obtener la capacidad máxima basada en los barberos activos
+      const [rowsBarberos] = await conexion.query(
+        'SELECT COUNT(*) AS total_barberos FROM barberos WHERE barberia_id = ? AND activo = 1',
+        [req.tenant.id]
+      );
+      const totalBarberos = rowsBarberos[0].total_barberos;
+      const capacidadMax = totalBarberos > 0 ? totalBarberos : 1;
+
+      // 2. Contar los turnos ocupados bloqueando las filas concurrentes con FOR UPDATE
+      const [rowsTurnos] = await conexion.query(
+        `SELECT COUNT(*) AS ocupados FROM reservas
+         WHERE barberia_id = ? AND fecha = ? AND hora = ? AND estado != 'cancelada'
+         FOR UPDATE`,
+        [req.tenant.id, fecha, hora]
+      );
+      const turnosOcupados = rowsTurnos[0].ocupados;
+
+      // 3. Validar si se superó la capacidad de barberos disponibles
+      if (turnosOcupados >= capacidadMax) {
+        await conexion.rollback();
+        return res.status(400).json({
+          ok: false,
+          error: 'Lo sentimos, este horario acaba de completarse. Por favor, selecciona otro.'
+        });
       }
 
-      const { servicio, fecha, hora, cliente } = req.body;
-
+      // 4. Registrar o guardar el cliente
       const queryCliente = `
         INSERT INTO clientes (barberia_id, nombre, telefono, email, observaciones)
         VALUES (?, ?, ?, ?, ?)
       `;
       const valoresCliente = [
         req.tenant.id,
-        cliente?.nombre || null,
-        cliente?.telefono || null,
-        cliente?.email || null,
-        cliente?.notas || cliente?.observaciones || null
+        cliente.nombre || null,
+        cliente.telefono || null,
+        cliente.email || null,
+        cliente.notas || cliente.observaciones || null
       ];
 
-      const [resCliente] = await db.query(queryCliente, valoresCliente);
+      const [resCliente] = await conexion.query(queryCliente, valoresCliente);
 
+      // 5. Registrar la reserva con barbero_id en NULL (para que el admin lo asigne luego)
       const queryReserva = `
-        INSERT INTO reservas (barberia_id, servicio_id, cliente_id, fecha, hora)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO reservas (barberia_id, servicio_id, cliente_id, fecha, hora, estado, barbero_id)
+        VALUES (?, ?, ?, ?, ?, 'pendiente', NULL)
       `;
-      const [resReserva] = await db.query(queryReserva, [
+      const [resReserva] = await conexion.query(queryReserva, [
         req.tenant.id,
         servicio,
         resCliente.insertId,
@@ -298,7 +376,9 @@ function registerRoutes(app) {
         hora
       ]);
 
-      logEvent('info', 'RESERVA_CREATED', {
+      await conexion.commit();
+
+      logEvent('info', 'RESERVA_CREATED_WITH_CAPACITY', {
         tenantId: req.tenant.id,
         reservaId: resReserva.insertId,
         clienteId: resCliente.insertId,
@@ -310,15 +390,23 @@ function registerRoutes(app) {
         idReserva: resReserva.insertId,
         idCliente: resCliente.insertId
       });
+
     } catch (error) {
+      await conexion.rollback();
       logEvent('error', 'CREATE_RESERVA_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ ok: false, error: 'Error al procesar la reserva.' });
+    } finally {
+      // Garantiza que la conexión siempre se devuelva al pool, ocurra un error o éxito
+      conexion.release();
     }
   });
 
+  /**
+   * hace consultas relacionales para filtrar las reservas según la fecha, el estado y el orden de presentación para el administrador.
+   */
   app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
     try {
-      const { fecha, estado, orden = 'DESC' } = req.query;
+      const { fecha, estado, query, orden = 'DESC' } = req.query;
 
       const orderDir = String(orden).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -328,13 +416,16 @@ function registerRoutes(app) {
           r.fecha,
           TIME_FORMAT(r.hora, '%H:%i') AS hora,
           r.estado,
+          r.barbero_id,
           c.nombre AS cliente_nombre,
           c.telefono AS cliente_telefono,
           s.nombre AS servicio_nombre,
-          s.precio AS servicio_precio
+          s.precio AS servicio_precio,
+          b.nombre AS barbero_nombre
         FROM reservas r
         INNER JOIN clientes c ON r.cliente_id = c.id
         INNER JOIN servicios s ON r.servicio_id = s.id
+        LEFT JOIN barberos b ON r.barbero_id = b.id
         WHERE r.barberia_id = ?
       `;
 
@@ -344,22 +435,38 @@ function registerRoutes(app) {
         sql += ' AND r.fecha = ?';
         params.push(fecha);
       }
+
       if (estado && estado !== 'todos') {
         sql += ' AND r.estado = ?';
         params.push(estado);
+      }
+
+      // Buscador inteligente en tiempo real para Cliente, Teléfono, Servicio o Barbero
+      if (query && query.trim() !== '') {
+        sql += ` AND (
+          c.nombre LIKE ? OR
+          c.telefono LIKE ? OR
+          s.nombre LIKE ? OR
+          b.nombre LIKE ?
+        )`;
+        const searchTerm = `%${query.trim()}%`;
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
       }
 
       sql += ` ORDER BY r.fecha ${orderDir}, r.hora ${orderDir}`;
 
       const [reservas] = await db.query(sql, params);
       return res.json(reservas);
+
     } catch (error) {
       logEvent('error', 'FETCH_RESERVAS_ADMIN_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ message: 'Error al consultar las reservas.' });
     }
   });
 
-
+  /**
+   * cambia el estado de la reserva.
+   */
   app.patch('/api/admin/reservas/:id/estado', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -396,6 +503,9 @@ function registerRoutes(app) {
     }
   });
 
+  /**
+   * calcula las métricas para el administrador.
+   */
   app.get('/api/admin/metricas', requireAdmin, async (req, res) => {
     try {
       const fechaParam = req.query.fecha;
@@ -426,6 +536,46 @@ function registerRoutes(app) {
     } catch (error) {
       logEvent('error', 'FETCH_METRICAS_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+  });
+
+  /**
+   * asigna barbero a una reserva en el panel.
+   */
+  app.patch('/api/admin/reservas/:id/barbero', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { barbero_id } = req.body;
+
+    const [result] = await db.query(
+      'UPDATE reservas SET barbero_id = ? WHERE id = ? AND barberia_id = ?',
+      [barbero_id || null, id, req.tenant.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada.' });
+    }
+
+    return res.json({ ok: true, message: 'Barbero asignado con éxito.' });
+  } catch (error) {
+    logEvent('error', 'ASSIGN_BARBERO_ERROR', { error: error.message, tenantId: req.tenant?.id });
+    return res.status(500).json({ message: 'Error al asignar el barbero.' });
+  }
+});
+
+  /**
+   * carga los barberos activos en el desplegable.
+   */
+  app.get('/api/admin/barberos', requireAdmin, async (req, res) => {
+    try {
+      const [barberos] = await db.query(
+        'SELECT id, nombre FROM barberos WHERE barberia_id = ? AND activo = 1',
+        [req.tenant.id]
+      );
+      return res.json(barberos);
+    } catch (error) {
+      logEvent('error', 'FETCH_BARBEROS_ERROR', { error: error.message, tenantId: req.tenant?.id });
+      return res.status(500).json({ message: 'Error al obtener los barberos.' });
     }
   });
 
