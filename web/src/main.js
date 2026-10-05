@@ -613,6 +613,10 @@ function abrirModal() {
     resetWizard();
   }
 
+  // Habilitamos el modal para accesibilidad y foco
+  modal.removeAttribute("inert");
+  modal.removeAttribute("aria-hidden");
+
   modal.classList.add("active");
   if (confirmHeader) confirmHeader.classList.add("hidden");
   if (confirmTwoHeader) confirmTwoHeader.classList.add("hidden");
@@ -630,7 +634,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (abrir2) abrir2.addEventListener("click", abrirModal);
 
   const cerrarModal = () => {
-    if (modal) modal.classList.remove("active");
+    // Quitamos el foco por seguridad antes de ocultarlo
+    if (document.activeElement && modal.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+
+    if (modal) {
+      // Bloqueamos el foco y la accesibilidad con inert y aria-hidden
+      modal.setAttribute("inert", "");
+      modal.setAttribute("aria-hidden", "true");
+      modal.classList.remove("active");
+    }
+
     if (stepper) stepper.classList.remove("hidden");
     if (confirmHeader) confirmHeader.classList.add("hidden");
     if (confirmTwoHeader) confirmTwoHeader.classList.add("hidden");
