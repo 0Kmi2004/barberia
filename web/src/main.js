@@ -29,6 +29,7 @@ let datosCliente = { nombre: '', email: '', telefono: '', notas: '' };
 const modal = document.getElementById("modalReserva");
 const abrir = document.getElementById("btnReservar");
 const abrir2 = document.getElementById("btnReservar2");
+const abrir3 = document.getElementById("bannerTurno");
 const cerrar = document.getElementById("btnCerrar");
 const cerrar2 = document.getElementById("btnAnterior6");
 
@@ -632,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal Triggers
   if (abrir) abrir.addEventListener("click", abrirModal);
   if (abrir2) abrir2.addEventListener("click", abrirModal);
+  if (abrir3) abrir3.addEventListener("click", abrirModal);
 
   const cerrarModal = () => {
     // Quitamos el foco por seguridad antes de ocultarlo

@@ -109,8 +109,6 @@ button {
 
   position: relative;
 
-  padding: 2em 2em 1em 2em;
-
   display: flex;
 
   background: linear-gradient(
@@ -124,19 +122,18 @@ button {
   box-shadow: 0 14px 15px rgba(0, 0, 0, 0.4);
 
   height: clamp(8em, 18vw, 13em);
+  justify-content: center;
 }
 
 .navbar-content{
 
   width: 100%;
-
   display: flex;
 
   align-items: center;
   margin-left: 24vw;
-  justify-content: space-around;
+  justify-content: space-evenly;
   padding: 2em 0;
-
 }
 
 @media (max-width: 380px) {
@@ -148,24 +145,26 @@ button {
 
 .logo-text{
   text-align: center;
-
   left: clamp(25px, 12vw, 55px);
+  text-wrap: nowrap;
+  width: min-content;
 
 }
 
 .chueco-logo{
   font-family: 'refont';
-  font-size: clamp(32px, 7vw, 80px);
+  font-size: clamp(30px, 9vw, 80px);
   rotate: -5deg;
   font-weight: 500;
 }
 
 .bar-logo{
     font-family: 'pefont';
-  font-size: clamp(22px, 3vw, 60px);
+  font-size: 3px;
   text-shadow: 3px 3px 0 #000,
     10px 10px 0 var(--black);
     rotate: -5deg;
+  display: block;
 
 }
 
@@ -224,7 +223,54 @@ text-align: center;
     display: none;
 
   }
+
+    .navbar {
+
+    box-shadow: none;
+
+  }
+
 }
+
+.banner-turno{
+    background-color: #f4ba2b;
+    width: 100%;
+    display: flex;
+
+    align-items: center;
+    gap: .5em;
+    padding: .2em .2em .2em 45%;
+    box-shadow: 0 14px 15px rgba(0, 0, 0, 0.4);
+
+  }
+
+  .banner-turno p{
+  font-family: 'Roboto Slab';
+  font-weight: 600;
+  color: #b31c1a;
+    justify-content: center;
+text-align:center;
+display: flex;
+font-size: clamp(9px, 1em, 18px);
+  }
+
+  .flecha-reserva{
+    background: none;
+    border: none;
+    display: flex;
+    width: 2em;
+  }
+
+  .flecha-reserva img{
+    width: 1.5em;
+  }
+
+@media (min-width:600px){
+  .banner-turno{
+    display: none;
+  }
+}
+
 
 
 /* =========================
@@ -811,7 +857,7 @@ text-align: center;
     display: flex;
     justify-content: space-between;
     padding: 14px 0 0;
-    gap: 1em;
+    gap: .5em;
 
 }
 
@@ -819,7 +865,7 @@ text-align: center;
     position: relative;
     width: max-content;
     min-height: 48px;
-    padding: 1em clamp(3em, 4em, 4em);
+    padding: 1em clamp(1.3em, 1.5em, 4em);
     border: none;
     border-radius: 8px;
     background:
@@ -1415,7 +1461,11 @@ gap: .1em;
 .confirmation-card.user{
   display: flex;
   gap: .5em;
+  overflow: scroll;
+}
 
+.confirmation-card.user::-webkit-scrollbar {
+  display: none;
 }
 
 .confirmation-list.user{
@@ -1427,7 +1477,7 @@ gap: .1em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  max-width: 100%;
   height: 1.5em;
 
 }
@@ -1450,6 +1500,7 @@ gap: .1em;
   align-items: center;
   flex: 1;
 }
+
 
 .name-after::after {
     content: "";
@@ -1875,7 +1926,7 @@ gap: .1em;
 
   font-size: clamp(42px, 4vw, 70px);
 
-  line-height: 0.95;
+  line-height: 1.2;
 
   letter-spacing: -2px;
 
@@ -2407,7 +2458,7 @@ blockquote {
 }
 
 .booking h2 {
-
+  line-height: 1.3;
   margin-bottom: .3em;
 }
 
@@ -2425,6 +2476,7 @@ margin-top: 1.5em;
   cursor: pointer;
   border-color: var(--black);
   width: max-content;
+  font-size: 16px;
 }
 
 .booking-button.large:hover {
