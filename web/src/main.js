@@ -134,7 +134,7 @@ async function cargarLandingDinamica() {
     if (elTituloServicios && data['l-tituloServicios']) elTituloServicios.innerHTML = data['l-tituloServicios'];
 
     const elTextServicios = document.getElementById('l-textServicios') || document.querySelector('.services-description');
-    if (elTextServicios && data['l-textServicios']) elTextServicios.textContent = data['l-textServicios'];
+    if (elTextServicios && data['l-textServicios']) elTextServicios.innerHTML = data['l-textServicios'];
 
     if (data['l-serviciosTable'] && Array.isArray(data['l-serviciosTable'])) {
       // Guardamos los servicios globalmente para poder consultarlos al seleccionar

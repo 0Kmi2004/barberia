@@ -216,6 +216,9 @@ text-align: center;
 
 }
 
+
+
+
 @media (max-width: 600px) {
 
   .booking-button {
@@ -2098,11 +2101,12 @@ gap: .1em;
 
   gap: 10%;
 
-  align-items: center;
+  align-items: stretch;
 
   background: var(--beige);
 
   color: var(--black);
+
 
 }
 
@@ -2139,6 +2143,7 @@ gap: .1em;
   pointer-events: none;
 
 }
+
 .about-stamp {
 
   position: absolute;
@@ -2187,6 +2192,8 @@ gap: .1em;
 
   letter-spacing: 3px;
 
+
+
 }
 
 .about h2,
@@ -2197,13 +2204,19 @@ gap: .1em;
 
   font-size: clamp(50px, 6vw, 90px);
 
-  line-height:  1.4;
+  line-height:  1.2;
 
 }
 
-.about h2 span,
+
 .services h2 span,
 .booking h2 span {
+
+  color: var(--red);
+  font-style: oblique ;
+}
+
+.about h2 span{
 
   color: var(--red);
   font-style: oblique ;
@@ -2237,8 +2250,6 @@ blockquote {
 
   margin-top: 40px;
 
-  margin-bottom: 3em;
-
   padding-left: 25px;
 
   border-left: 6px solid var(--red);
@@ -2248,7 +2259,7 @@ blockquote {
   font-size: 25px;
 
   line-height: 1.1;
-
+  margin-bottom: 3em;
 }
 
 /* =========================
@@ -2265,24 +2276,34 @@ blockquote {
 
 .services-header {
 
-
-  margin-bottom: 70px;
-
   display: flex;
+gap: 2.5em;
+align-items: end;
+margin-bottom: 2em;
+justify-content: space-between;
+}
 
-  justify-content: space-between;
+.services-header h2{
 
-  align-items: end;
+margin-top: .3em;
+padding: 0;
+
+margin-bottom: 1em;
 
 }
 
 .services-description {
 
-  max-width: 300px;
-
-  color: var(--gray);
+  color: #beb9b1;
 
   font-size: 17px;
+text-align: end;
+padding-bottom: .5em;
+}
+
+.services-description span{
+
+color: rgb(235, 233, 233);
 
 }
 
