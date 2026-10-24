@@ -50,9 +50,6 @@ export async function fetchLandingConfig() {
 ================================= */
 
 
-/**
- * Obtiene los horarios disponibles para una fecha específica.
- */
 export async function fetchDisponibilidad(fecha) {
   const tenant = getSubdomain();
   const res = await fetch(`/api/disponibilidad/${fecha}`, {

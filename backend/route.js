@@ -1,7 +1,12 @@
 const db = require('./config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { generarHorarios } = require('./utils/horarios');
+const { enviarConfirmacionTurno } = require('./utils/mailer');
+const { registrarCliente, removerCliente } = require('./utils/sseService');
+const { notificarAdmin } = require('./utils/sseService');
+const identificarTenant = require('./middleware/tenant');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -9,9 +14,6 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET debe estar configurado');
 }
 
-/**
- * función transversal que alimenta los logs de Node.js y, por ende, los registros de PM2 en tu VPS de Hostinger.
- */
 function logEvent(level, event, details = {}) {
   console.log(
     JSON.stringify({
@@ -23,12 +25,13 @@ function logEvent(level, event, details = {}) {
   );
 }
 
-/**
- * verifica el rol del administrador y tenant.
- */
 function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  let token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'No autorizado' });
@@ -39,7 +42,8 @@ function requireAdmin(req, res, next) {
   }
 
   try {
-    const user = jwt.verify(token, JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'tu_secreto_jwt_por_defecto';
+    const user = jwt.verify(token, secret);
 
     if (user.role !== 'admin') {
       logEvent('warn', 'AUTH_FORBIDDEN_ACCESS', { userId: user.id, path: req.originalUrl });
@@ -63,11 +67,10 @@ function requireAdmin(req, res, next) {
   }
 }
 
+module.exports = requireAdmin;
+
 function registerRoutes(app) {
 
-  /**
-   * consulta la configuracion estetica de la barbería.
-   */
   app.get('/api/barberia/configuracion', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -80,8 +83,6 @@ function registerRoutes(app) {
       );
 
       const b = barberias[0] || {};
-
-      console.log('📋 Datos leídos de Aiven para tenant:', req.tenant.id, b);
 
       let servicios = [];
       try {
@@ -128,15 +129,11 @@ function registerRoutes(app) {
       });
 
     } catch (error) {
-      console.error('Error en /api/barberia/configuracion:', error);
       logEvent('error', 'FETCH_CONFIGURACION_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ error: 'Error al obtener la configuración de la barbería' });
     }
   });
 
-  /**
-   * se coneta con la tabla usuarios para validar contraseña y generar un token JWT para el usuario.
-   */
   app.post('/api/auth/login', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -189,9 +186,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * valida el token JWT con el middleware requireAdmin
-   */
   app.get('/api/admin/verify', requireAdmin, (req, res) => {
     res.status(200).json({
       valid: true,
@@ -199,16 +193,34 @@ function registerRoutes(app) {
     });
   });
 
-  /**
-   * confirma el backend este online
-   */
+  app.get('/api/admin/events', identificarTenant, requireAdmin, (req, res) => {
+    if (!req.tenant?.id) {
+      return res.status(400).json({ error: 'Tenant no especificado para SSE' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
+
+    const tenantId = req.tenant.id;
+
+    registrarCliente(tenantId, res);
+
+    req.on('close', () => {
+      removerCliente(tenantId, res);
+      res.end();
+    });
+  });
+
   app.get('/health', (req, res) => {
     res.json({ ok: true });
   });
 
-  /**
-   * filtra los servicios segun el tenant
-   */
   app.get('/api/servicios', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -226,9 +238,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * calcula qué bloques horarios están libres u ocupados en el día seleccionado.
-   */
   app.get('/api/disponibilidad/:fecha', async (req, res) => {
     try {
       if (!req.tenant?.id) {
@@ -242,17 +251,14 @@ function registerRoutes(app) {
         return res.json([]);
       }
 
-      // 1. Obtener el total de barberos activos del tenant actual
       const [rowsBarberos] = await db.query(
         'SELECT COUNT(*) AS total_barberos FROM barberos WHERE barberia_id = ? AND activo = 1',
         [req.tenant.id]
       );
       const totalBarberos = rowsBarberos[0].total_barberos;
 
-      // Si por alguna razón no hay barberos configurados, establecemos un mínimo de 1 para evitar errores de división o lógica
       const capacidadMax = totalBarberos > 0 ? totalBarberos : 1;
 
-      // 2. Contar cuántos turnos ocupados existen agrupados por hora para esa fecha
       const sql = `
         SELECT TIME_FORMAT(hora, '%H:%i') AS hora_str, COUNT(*) AS total_ocupados
         FROM reservas
@@ -262,13 +268,11 @@ function registerRoutes(app) {
 
       const [resultados] = await db.query(sql, [fecha, req.tenant.id]);
 
-      // Creamos un mapa rápido para consultar el conteo por cada hora (ej: { '15:00': 2 })
       const mapaOcupados = {};
       resultados.forEach((row) => {
         mapaOcupados[row.hora_str] = row.total_ocupados;
       });
 
-      // 3. Mapear los horarios evaluando si la cantidad de ocupados es menor a la capacidad máxima
       const horariosRespuesta = horarios.map((horario) => {
         const ocupadosEnEstaHora = mapaOcupados[horario] || 0;
 
@@ -285,9 +289,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * consulta las fechas que tienen reservas pendientes para el administrador.
-   */
   app.get('/api/admin/fechas-pendientes', requireAdmin, async (req, res) => {
     try {
       const sql = `
@@ -303,9 +304,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * crea la reserva registrando los datos en las tablas clientes y reservas.
-   */
   app.post('/api/reservas', async (req, res) => {
     if (!req.tenant?.id) {
       return res.status(400).json({ error: 'Tenant no especificado' });
@@ -322,7 +320,6 @@ function registerRoutes(app) {
     try {
       await conexion.beginTransaction();
 
-      // 1. Obtener la capacidad máxima basada en los barberos activos
       const [rowsBarberos] = await conexion.query(
         'SELECT COUNT(*) AS total_barberos FROM barberos WHERE barberia_id = ? AND activo = 1',
         [req.tenant.id]
@@ -330,16 +327,14 @@ function registerRoutes(app) {
       const totalBarberos = rowsBarberos[0].total_barberos;
       const capacidadMax = totalBarberos > 0 ? totalBarberos : 1;
 
-      // 2. Contar los turnos ocupados bloqueando las filas concurrentes con FOR UPDATE
       const [rowsTurnos] = await conexion.query(
         `SELECT COUNT(*) AS ocupados FROM reservas
-         WHERE barberia_id = ? AND fecha = ? AND hora = ? AND estado != 'cancelada'
-         FOR UPDATE`,
+        WHERE barberia_id = ? AND fecha = ? AND hora = ? AND estado != 'cancelada'
+        FOR UPDATE`,
         [req.tenant.id, fecha, hora]
       );
       const turnosOcupados = rowsTurnos[0].ocupados;
 
-      // 3. Validar si se superó la capacidad de barberos disponibles
       if (turnosOcupados >= capacidadMax) {
         await conexion.rollback();
         return res.status(400).json({
@@ -348,7 +343,6 @@ function registerRoutes(app) {
         });
       }
 
-      // 4. Registrar o guardar el cliente
       const queryCliente = `
         INSERT INTO clientes (barberia_id, nombre, telefono, email, observaciones)
         VALUES (?, ?, ?, ?, ?)
@@ -363,17 +357,19 @@ function registerRoutes(app) {
 
       const [resCliente] = await conexion.query(queryCliente, valoresCliente);
 
-      // 5. Registrar la reserva con barbero_id en NULL (para que el admin lo asigne luego)
+      const tokenCancelacion = crypto.randomBytes(32).toString('hex');
+
       const queryReserva = `
-        INSERT INTO reservas (barberia_id, servicio_id, cliente_id, fecha, hora, estado, barbero_id)
-        VALUES (?, ?, ?, ?, ?, 'pendiente', NULL)
+        INSERT INTO reservas (barberia_id, servicio_id, cliente_id, fecha, hora, estado, barbero_id, token_cancelacion)
+        VALUES (?, ?, ?, ?, ?, 'pendiente', NULL, ?)
       `;
       const [resReserva] = await conexion.query(queryReserva, [
         req.tenant.id,
         servicio,
         resCliente.insertId,
         fecha,
-        hora
+        hora,
+        tokenCancelacion
       ]);
 
       await conexion.commit();
@@ -385,25 +381,267 @@ function registerRoutes(app) {
         servicioId: servicio
       });
 
-      return res.status(201).json({
+      notificarAdmin(req.tenant.id, 'ACTUALIZAR_GRILLA', {
+        reservaId: resReserva.insertId,
+        accion: 'NUEVA_RESERVA'
+      });
+
+      res.status(201).json({
         ok: true,
         idReserva: resReserva.insertId,
         idCliente: resCliente.insertId
       });
+
+      if (cliente.email) {
+        const [rowsServicio] = await db.query('SELECT nombre FROM servicios WHERE id = ?', [servicio]);
+        const nombreServicio = rowsServicio[0]?.nombre || 'Servicio';
+
+        enviarConfirmacionTurno({
+          emailCliente: cliente.email,
+          nombreCliente: cliente.nombre || 'Cliente',
+          fecha,
+          hora,
+          servicio: nombreServicio,
+          barbero: 'Asignado en el local',
+          tokenCancelacion,
+          subdominio: req.tenant?.subdominio
+        });
+      }
 
     } catch (error) {
       await conexion.rollback();
       logEvent('error', 'CREATE_RESERVA_ERROR', { error: error.message, tenantId: req.tenant?.id });
       return res.status(500).json({ ok: false, error: 'Error al procesar la reserva.' });
     } finally {
-      // Garantiza que la conexión siempre se devuelva al pool, ocurra un error o éxito
       conexion.release();
     }
   });
 
-  /**
-   * hace consultas relacionales para filtrar las reservas según la fecha, el estado y el orden de presentación para el administrador.
-   */
+  app.get('/api/turnos/cancelar', async (req, res) => {
+    const { token } = req.query;
+    const dominioBase = process.env.BASE_DOMAIN || 'barberiapp.ar/demo';
+    const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+
+    const fallbackUrl = `${protocol}://demo.${dominioBase}`;
+
+    if (!token) {
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Enlace Inválido</title>
+            <style>
+                body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                .warning-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #e53e3e, #c53030); border: 2px solid #fc8181; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+                .warning-circle svg { width: 32px; height: 32px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="warning-circle">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+                <h2>Enlace inválido</h2>
+                <p>El enlace de cancelación proporcionado no es válido.</p>
+                <a href="${fallbackUrl}" class="btn">Volver al inicio</a>
+            </div>
+        </body>
+        </html>
+      `);
+    }
+
+    try {
+
+      const [turnos] = await db.query(
+        `SELECT r.*, b.subdominio
+         FROM reservas r
+         INNER JOIN barberias b ON r.barberia_id = b.id
+         WHERE r.token_cancelacion = ?`,
+        [token]
+      );
+
+      if (turnos.length === 0) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Turno No Encontrado</title>
+              <style>
+                  body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                  .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                  h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                  p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                  .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                  .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                  .warning-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #e53e3e, #c53030); border: 2px solid #fc8181; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+                  .warning-circle svg { width: 32px; height: 32px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+              </style>
+          </head>
+          <body>
+              <div class="card">
+                  <div class="warning-circle">
+                      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </div>
+                  <h2>Turno no encontrado</h2>
+                  <p>No pudimos encontrar una reserva asociada a este enlace.</p>
+                  <button onclick="window.close()" class="btn">Cerrar</button>
+              </div>
+          </body>
+          </html>
+        `);
+      }
+
+      const turno = turnos[0];
+
+      const urlInicio = `${protocol}://${turno.subdominio}.${dominioBase}`;
+
+      if (turno.estado === 'cancelada') {
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Turno Ya Cancelado</title>
+              <style>
+                  body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                  .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                  h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                  p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                  .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                  .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                  .info-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #3182ce, #2b6cb0); border: 2px solid #63b3ed; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+                  .info-circle svg { width: 32px; height: 32px; stroke: white; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+              </style>
+          </head>
+          <body>
+              <div class="card">
+                  <div class="info-circle">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  </div>
+                  <h2>Reserva liberada</h2>
+                  <p>Este turno ya se encontraba cancelado anteriormente.</p>
+                  <a href="${urlInicio}" class="btn">Agendar otro turno</a>
+              </div>
+          </body>
+          </html>
+        `);
+      }
+
+      const fechaTurno = new Date(`${turno.fecha} ${turno.hora}`);
+      const ahora = new Date();
+      let diferenciaHoras = (fechaTurno - ahora) / (1000 * 60 * 60);
+
+
+      if (diferenciaHoras < 3) {
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>No es posible cancelar</title>
+              <style>
+                  body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                  .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                  h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                  p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                  .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                  .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                  .warning-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #e53e3e, #c53030); border: 2px solid #fc8181; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+                  .warning-circle svg { width: 32px; height: 32px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+              </style>
+          </head>
+          <body>
+              <div class="card">
+                  <div class="warning-circle">
+                      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </div>
+                  <h2>Límite de tiempo excedido</h2>
+                  <p>No es posible cancelar el turno con menos de 3 horas de anticipación. Por favor, comunícate directamente con la barbería.</p>
+                  <a href="${urlInicio}" class="btn">Volver al inicio</a>
+              </div>
+          </body>
+          </html>
+        `);
+      }
+
+      await db.query('UPDATE reservas SET estado = ? WHERE token_cancelacion = ?', ['cancelada', token]);
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Turno Cancelado con Éxito</title>
+            <style>
+                body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                .success-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #dcae4d, #b98222); border: 2px solid #f0c86c; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(218, 169, 72, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; animation: successPop 0.5s ease-out; }
+                .success-circle svg { width: 34px; height: 34px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="success-circle">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h2>¡Turno cancelado con éxito!</h2>
+                <p>El horario ha sido liberado. ¡ Esperamos verte pronto !</p>
+                <a href="${urlInicio}" class="btn">Agendar otro turno</a>
+            </div>
+        </body>
+        </html>
+      `);
+    } catch (error) {
+      logEvent('error', 'CANCELAR_TURNO_ERROR', { error: error.message });
+      return res.status(500).send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Error del Servidor</title>
+            <style>
+                body { background-color: #0f0f0f; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                .card { background-color: #1a1a1a; border: 1px solid #2a2a2a; padding: 40px 30px; border-radius: 12px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; flex-direction: column; }
+                h2 { color: #ffffff; margin-bottom: 15px; font-size: 24px; }
+                p { color: #b0b0b0; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+                .btn { background-color: #d4af37; color: #111111; padding: 14px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
+                .btn:hover { background-color: #e6c553; transform: translateY(-1px); }
+                .warning-circle { width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg, #e53e3e, #c53030); border: 2px solid #fc8181; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.12), 0 8px 20px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+                .warning-circle svg { width: 32px; height: 32px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="warning-circle">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+                <h2>Ocurrió un error</h2>
+                <p>Ocurrió un error al procesar la cancelación. Por favor, intenta nuevamente más tarde.</p>
+                <button onclick="window.close()" class="btn">Cerrar</button>
+            </div>
+        </body>
+        </html>
+      `);
+    }
+  });
+
   app.get('/api/admin/reservas', requireAdmin, async (req, res) => {
     try {
       const { fecha, estado, query, orden = 'DESC' } = req.query;
@@ -441,7 +679,6 @@ function registerRoutes(app) {
         params.push(estado);
       }
 
-      // Buscador inteligente en tiempo real para Cliente, Teléfono, Servicio o Barbero
       if (query && query.trim() !== '') {
         sql += ` AND (
           c.nombre LIKE ? OR
@@ -464,9 +701,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * cambia el estado de la reserva.
-   */
   app.patch('/api/admin/reservas/:id/estado', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -492,6 +726,11 @@ function registerRoutes(app) {
         newStatus: estado
       });
 
+      notificarAdmin(req.tenant.id, 'ACTUALIZAR_GRILLA', {
+        reservaId: Number(id),
+        nuevoEstado: estado
+      });
+
       return res.json({ message: `Turno marcado como ${estado} con éxito.` });
     } catch (error) {
       logEvent('error', 'UPDATE_RESERVA_STATUS_ERROR', {
@@ -503,9 +742,6 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * calcula las métricas para el administrador.
-   */
   app.get('/api/admin/metricas', requireAdmin, async (req, res) => {
     try {
       const fechaParam = req.query.fecha;
@@ -539,33 +775,27 @@ function registerRoutes(app) {
     }
   });
 
-  /**
-   * asigna barbero a una reserva en el panel.
-   */
   app.patch('/api/admin/reservas/:id/barbero', requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { barbero_id } = req.body;
+    try {
+      const { id } = req.params;
+      const { barbero_id } = req.body;
 
-    const [result] = await db.query(
-      'UPDATE reservas SET barbero_id = ? WHERE id = ? AND barberia_id = ?',
-      [barbero_id || null, id, req.tenant.id]
-    );
+      const [result] = await db.query(
+        'UPDATE reservas SET barbero_id = ? WHERE id = ? AND barberia_id = ?',
+        [barbero_id || null, id, req.tenant.id]
+      );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Reserva no encontrada.' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Reserva no encontrada.' });
+      }
+
+      return res.json({ ok: true, message: 'Barbero asignado con éxito.' });
+    } catch (error) {
+      logEvent('error', 'ASSIGN_BARBERO_ERROR', { error: error.message, tenantId: req.tenant?.id });
+      return res.status(500).json({ message: 'Error al asignar el barbero.' });
     }
+  });
 
-    return res.json({ ok: true, message: 'Barbero asignado con éxito.' });
-  } catch (error) {
-    logEvent('error', 'ASSIGN_BARBERO_ERROR', { error: error.message, tenantId: req.tenant?.id });
-    return res.status(500).json({ message: 'Error al asignar el barbero.' });
-  }
-});
-
-  /**
-   * carga los barberos activos en el desplegable.
-   */
   app.get('/api/admin/barberos', requireAdmin, async (req, res) => {
     try {
       const [barberos] = await db.query(
@@ -578,6 +808,8 @@ function registerRoutes(app) {
       return res.status(500).json({ message: 'Error al obtener los barberos.' });
     }
   });
+
+
 
 }
 

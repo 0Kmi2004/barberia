@@ -13,7 +13,7 @@ const identificarTenant = require('./middleware/tenant');
  */
 const app = express();
 
-// Configuración de Seguridad y Cabeceras
+
 app.use(
   helmet({
     frameguard: { action: 'deny' },
@@ -51,10 +51,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Compresión de respuestas
 app.use(
   compression({
     filter: (req, res) => {
+      if (req.path === '/api/admin/events') return false;
       if (req.headers['x-no-compression']) return false;
       return compression.filter(req, res);
     },
@@ -62,7 +62,6 @@ app.use(
   })
 );
 
-// Desactivar caché en la API
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -70,11 +69,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Habilitar CORS y parseo de JSON
 app.use(cors());
 app.use(express.json());
 
-// Logging de peticiones con ID único
 app.use((req, res, next) => {
   const startedAt = Date.now();
   req.requestId = crypto.randomUUID();

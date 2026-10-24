@@ -6,6 +6,8 @@ let fechasConPendientes = [];
 let fechaActualVisualizada = new Date(); // Para navegar meses
 let fechaSeleccionadaStr = ''; // Por defecto vacía para cargar TODAS las reservas
 
+let globalEventSource = null;
+
 async function cargarFechasPendientes() {
   try {
     const response = await fetch('/api/admin/fechas-pendientes', {
@@ -363,7 +365,6 @@ async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden
     if (estado && estado !== 'todos') params.append('estado', estado);
     if (orden) params.append('orden', orden);
 
-    // ¡CORRECCIÓN 1!: Añadimos el parámetro query para que viaje al backend
     if (query && query.trim() !== '') {
       params.append('query', query.trim());
     }
@@ -400,7 +401,6 @@ async function fetchAppointments(fecha = '', estado = 'todos', query = '', orden
         const tel = (r.cliente_telefono || r.telefono || '').toLowerCase();
         const servicio = (r.servicio_nombre || '').toLowerCase();
 
-        // ¡CORRECCIÓN 2!: Incluimos el nombre del barbero en el filtro local del cliente
         const barbero = (r.barbero_nombre || '').toLowerCase();
 
         return nombre.includes(q) || tel.includes(q) || servicio.includes(q) || barbero.includes(q);
@@ -455,7 +455,7 @@ function renderTable(reservas, barberosDisponibles = []) {
   if (reservas.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 8; // Actualizado a 8 columnas totales
+    td.colSpan = 8;
     td.style.textAlign = 'center';
     td.style.padding = '24px';
     td.style.color = '#6b7280';
@@ -493,7 +493,6 @@ function renderTable(reservas, barberosDisponibles = []) {
       selectBarbero.setAttribute('data-id', reservaId);
       selectBarbero.style.cssText = 'padding: 4px 8px; border-radius: 4px; border: 1px solid #d1d5db; background: #2a2a2a; color: #fff; font-size: 13px;';
 
-      // 1. Descubrir qué barberos ya están ocupados en esta misma fecha y hora exacta
       const barberosOcupadosEnHorario = reservas
         .filter(r => {
           const rId = r.reserva_id || r.id;
@@ -544,7 +543,6 @@ function renderTable(reservas, barberosDisponibles = []) {
             e.target.style.borderColor = '#d1d5db';
           }, 1500);
 
-          // Actualizar el estado localmente para reflejar los cambios al instante
           reserva.barbero_id = nuevoBarberoId;
 
         } catch (error) {
@@ -697,6 +695,51 @@ function inyectarEstilosEstado() {
   document.head.appendChild(style);
 }
 
+function iniciarEscuchaEnTiempoReal() {
+  const token = localStorage.getItem('adminToken');
+  if (!token) {
+    console.warn('⚠️ No se encontró el token de administración en el localStorage.');
+    return;
+  }
+
+  if (globalEventSource) {
+    globalEventSource.close();
+    globalEventSource = null;
+  }
+
+  const hostname = window.location.hostname;
+  const partesHost = hostname.split('.');
+  const subdominioActual = (partesHost.length > 1 && partesHost[0] !== 'localhost') ? partesHost[0] : 'demo';
+
+  const urlSSE = `http://localhost:3000/api/admin/events?tenant=${subdominioActual}&token=${token}`;
+
+  const eventSource = new EventSource(urlSSE);
+
+  eventSource.onopen = () => {
+    console.log('🟢 Conexión SSE establecida correctamente con el servidor.');
+  };
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.tipo === 'ACTUALIZAR_GRILLA') {
+        if (typeof applyFilters === 'function') applyFilters();
+        if (typeof refrescarCalendario === 'function') refrescarCalendario();
+      }
+    } catch (e) {
+      console.error('❌ Error al procesar evento SSE:', e);
+    }
+  };
+
+  eventSource.onerror = (error) => {
+    console.warn('⚠️ Conexión en tiempo real interrumpida o reintentando...', error);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  iniciarEscuchaEnTiempoReal();
+});
+
 async function protectAdminRoute() {
   const token = localStorage.getItem('adminToken');
 
@@ -722,7 +765,6 @@ async function protectAdminRoute() {
   }
 }
 
-// Función auxiliar unificada para incluir token y subdominio actual (tenant)
 function getAuthHeaders() {
   const token = localStorage.getItem('adminToken');
   const hostname = window.location.hostname;

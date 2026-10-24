@@ -1,30 +1,34 @@
 const db = require('../config/database');
 
-/**
- * Middleware para identificar la barbería (tenant) a partir del subdominio o la cabecera x-tenant.
- */
 async function identificarTenant(req, res, next) {
-  // 1. Prioridad: Capturar la cabecera x-tenant si el frontend la envió explícitamente
   const tenantHeader = req.headers['x-tenant'];
+  // Captura el tenant si viene por query string (ej: ?tenant=demo) o por body
+  const tenantQuery = req.query?.tenant || req.body?.tenant;
 
-  // 2. Si no hay header, capturar el Host del cliente/navegador (ej: 'demo.localhost:5174' o 'elgalpon.mibarbe.com')
   const host = req.headers.host || '';
   const hostSinPuerto = host.split(':')[0];
   const partes = hostSinPuerto.split('.');
 
   let subdominio = null;
 
-  if (tenantHeader && tenantHeader !== 'null' && tenantHeader !== 'undefined') {
+  // 1. Priorizar query param (necesario para EventSource / SSE)
+  if (tenantQuery && tenantQuery !== 'null' && tenantQuery !== 'undefined') {
+    subdominio = tenantQuery.toLowerCase();
+  }
+  // 2. Revisar header x-tenant
+  else if (tenantHeader && tenantHeader !== 'null' && tenantHeader !== 'undefined') {
     subdominio = tenantHeader.toLowerCase();
-  } else if (partes.length > 1 && partes[0] !== 'www') {
-    // Soporta tanto 'demo.localhost' como 'demo.mibarbe.com'
-    if (partes[0] !== 'localhost') {
+  }
+  // 3. Revisar subdominio del host (asegurando que no sea IP ni localhost)
+  else if (partes.length > 1 && partes[0] !== 'www') {
+    const esIP = /^\d+\.\d+\.\d+\.\d+$/.test(hostSinPuerto) || hostSinPuerto === 'localhost';
+    if (!esIP) {
       subdominio = partes[0].toLowerCase();
     }
   }
 
-  // Si no se logra determinar un subdominio válido, asignar 'demo' por defecto en desarrollo
-  if (!subdominio || subdominio === 'localhost' || subdominio === 'api') {
+  // Si no se detectó un subdominio válido, usar 'demo' por defecto
+  if (!subdominio || subdominio === 'localhost' || subdominio === 'api' || /^\d+\.\d+\.\d+\.\d+$/.test(subdominio)) {
     subdominio = 'demo';
   }
 
@@ -38,7 +42,6 @@ async function identificarTenant(req, res, next) {
       return res.status(404).json({ ok: false, error: `Barbería '${subdominio}' no encontrada o inactiva.` });
     }
 
-    // Guardamos los datos de la barbería en la petición
     req.tenant = filas[0];
     next();
   } catch (error) {

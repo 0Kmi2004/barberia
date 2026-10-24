@@ -137,7 +137,6 @@ async function cargarLandingDinamica() {
     if (elTextServicios && data['l-textServicios']) elTextServicios.innerHTML = data['l-textServicios'];
 
     if (data['l-serviciosTable'] && Array.isArray(data['l-serviciosTable'])) {
-      // Guardamos los servicios globalmente para poder consultarlos al seleccionar
       serviciosGlobal = data['l-serviciosTable'];
 
       renderizarGridLanding(serviciosGlobal);
@@ -302,15 +301,12 @@ document.addEventListener("click", (e) => {
   const card = e.target.closest(".modal-service-card");
   if (!card) return;
 
-  // Buscar el radio button dentro de la tarjeta presionada
   const radio = card.querySelector('input[type="radio"]');
   if (radio) {
     radio.checked = true;
 
-    // Disparar manualmente el evento 'change' para que se actualicen las variables globales
     radio.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // Actualizar las clases visuales de selección en las tarjetas
     document.querySelectorAll(".modal-service-card").forEach(c => {
       c.classList.remove("selected");
     });
