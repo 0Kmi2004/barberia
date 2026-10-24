@@ -13,11 +13,9 @@ const enviarConfirmacionTurno = async (datosReserva) => {
         subdominio
     } = datosReserva;
 
-    // Construcción dinámica de la URL según el entorno y el subdominio del tenant
     const dominioBase = process.env.BASE_DOMAIN || 'barberiapp.ar';
     const host = subdominio ? `${subdominio}.${dominioBase}` : dominioBase;
 
-    // Si estás en producción usa HTTPS con tu dominio; si estás en desarrollo local usa localhost
     const protocolo = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const baseUrl = process.env.NODE_ENV === 'production'
         ? `${protocolo}://${host}`
@@ -27,7 +25,6 @@ const enviarConfirmacionTurno = async (datosReserva) => {
 
     try {
         const data = await resend.emails.send({
-            // 📍 Usando tu dominio corporativo oficial verificado en Resend
             from: 'Barbería App <no-reply@barberiapp.ar>',
             to: emailCliente,
             subject: `¡Turno confirmado! - ${fecha} a las ${hora} hs`,

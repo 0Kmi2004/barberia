@@ -499,10 +499,10 @@ function registerRoutes(app) {
 
   app.get('/api/turnos/cancelar', async (req, res) => {
     const { token } = req.query;
-    const dominioBase = process.env.BASE_DOMAIN || 'barberiapp.ar/demo';
+    const dominioBase = process.env.BASE_DOMAIN || 'barberiapp.ar';
     const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
 
-    const fallbackUrl = `${protocol}://demo.${dominioBase}`;
+    const fallbackUrl = `${protocol}://demo.${dominioBase}/demo`;
 
     if (!token) {
       return res.status(400).send(`
@@ -582,7 +582,7 @@ function registerRoutes(app) {
 
       const turno = turnos[0];
 
-      const urlInicio = `${protocol}://${turno.subdominio}.${dominioBase}`;
+      const urlInicio = `${protocol}://${turno.subdominio}.${dominioBase}/demo`;
 
       if (turno.estado === 'cancelada') {
         return res.send(`
