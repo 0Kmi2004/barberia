@@ -13,14 +13,22 @@ const enviarConfirmacionTurno = async (datosReserva) => {
         subdominio
     } = datosReserva;
 
-    // Construcción dinámica de la URL según el subdominio del tenant
+    // Construcción dinámica de la URL según el entorno y el subdominio del tenant
     const dominioBase = process.env.BASE_DOMAIN || 'barberiapp.ar';
     const host = subdominio ? `${subdominio}.${dominioBase}` : dominioBase;
-    const urlCancelacion = `http://localhost:3000/api/turnos/cancelar?token=${tokenCancelacion}`;
+
+    // Si estás en producción usa HTTPS con tu dominio; si estás en desarrollo local usa localhost
+    const protocolo = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const baseUrl = process.env.NODE_ENV === 'production'
+        ? `${protocolo}://${host}`
+        : 'http://localhost:3000';
+
+    const urlCancelacion = `${baseUrl}/api/turnos/cancelar?token=${tokenCancelacion}`;
 
     try {
         const data = await resend.emails.send({
-            from: 'Barbería App <onboarding@resend.dev>', // En producción usarás tu propio dominio verificado
+            // 📍 Usando tu dominio corporativo oficial verificado en Resend
+            from: 'Barbería App <no-reply@barberiapp.ar>',
             to: emailCliente,
             subject: `¡Turno confirmado! - ${fecha} a las ${hora} hs`,
             html: `
@@ -41,7 +49,7 @@ const enviarConfirmacionTurno = async (datosReserva) => {
                 </div>
             `
         });
-        console.log('Correo enviado correctamente:', data);
+        console.log('Correo enviado correctamente con Resend:', data);
     } catch (error) {
         console.error('Error al enviar correo con Resend:', error);
     }

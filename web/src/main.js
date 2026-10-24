@@ -69,90 +69,137 @@ const btnConfirmarReserva = document.getElementById("btnConfirmarReserva");
    CARGA DE LANDING
 ================================= */
 async function cargarLandingDinamica() {
+  const tenantKey = 'barberia_config_cache';
+
   try {
-    const data = await fetchLandingConfig();
+    let data = window.__INITIAL_CONFIG__;
 
-    if (!data) return;
-
-    if (data['l-barberiaNombre']) {
-      document.title = `${data['l-barberiaNombre']} | Turnos Online`;
-    }
-
-    const elH1 = document.getElementById('l-barberiaNombre');
-    if (elH1 && data['l-barberiaNombre']) {
-      elH1.innerHTML = `${data['l-barberiaNombre']} <span class="bar-logo" style="display:block; font-size: 0.5em;">Barbería</span>`;
-    }
-
-    const elLogo = document.getElementById('l-logoUrl') || document.querySelector('header .logo img');
-    if (elLogo && data['l-logoUrl']) {
-      elLogo.src = data['l-logoUrl'];
-      elLogo.alt = `${data['l-barberiaNombre'] || 'Barbería'} Logo`;
-    }
-
-    const elHeroTitle = document.getElementById('l-heroTitle') || document.querySelector('.hero-card h2');
-    if (elHeroTitle && data['l-heroTitle']) elHeroTitle.innerHTML = data['l-heroTitle'];
-
-    const elHeroSubtitle = document.getElementById('l-heroSubtitle') || document.querySelector('.hero-location');
-    if (elHeroSubtitle && data['l-heroSubtitle']) elHeroSubtitle.innerHTML = data['l-heroSubtitle'];
-
-    const elHeroText = document.getElementById('l-heroText') || document.querySelector('.rating p');
-    if (elHeroText && data['l-heroText']) elHeroText.textContent = data['l-heroText'];
-
-    const elVideo = document.getElementById('l-heroVideo') || document.querySelector('.hero-video video');
-    if (elVideo && data['l-heroVideo']) {
-      elVideo.src = data['l-heroVideo'];
-      elVideo.load();
-    }
-
-    const elHeroVideoText = document.getElementById('l-heroVideoText') || document.getElementById('about-img-p');
-    if (elHeroVideoText && data['l-heroVideoText']) elHeroVideoText.innerHTML = data['l-heroVideoText'];
-
-    const elSobreAbout = document.getElementById('l-sobretituloAbout') || document.querySelector('.about-content .section-label');
-    if (elSobreAbout && data['l-sobretituloAbout']) elSobreAbout.textContent = data['l-sobretituloAbout'];
-
-    const elTituloAbout = document.getElementById('l-tituloAbout') || document.querySelector('.about-content h2');
-    if (elTituloAbout && data['l-tituloAbout']) elTituloAbout.innerHTML = data['l-tituloAbout'];
-
-    const elTextAbout = document.getElementById('l-textAbout');
-    if (elTextAbout && data['l-textAbout']) elTextAbout.textContent = data['l-textAbout'];
-
-    const elTextAbout2 = document.getElementById('l-textAbout2');
-    if (elTextAbout2 && data['l-textAbout2']) elTextAbout2.textContent = data['l-textAbout2'];
-
-    const elSubtextAbout = document.getElementById('l-subtextAbout');
-    if (elSubtextAbout && data['l-subtextAbout']) elSubtextAbout.textContent = data['l-subtextAbout'];
-
-    const elAboutImg = document.getElementById('l-aboutImg');
-    if (elAboutImg && data['l-aboutImg']) {
-      elAboutImg.src = data['l-aboutImg'];
-    }
-
-    const elSobreServicios = document.getElementById('l-sobretituloServicios') || document.querySelector('#servicios .section-label');
-    if (elSobreServicios && data['l-sobretituloServicios']) elSobreServicios.textContent = data['l-sobretituloServicios'];
-
-    const elTituloServicios = document.getElementById('l-tituloServicios') || document.querySelector('#servicios h2');
-    if (elTituloServicios && data['l-tituloServicios']) elTituloServicios.innerHTML = data['l-tituloServicios'];
-
-    const elTextServicios = document.getElementById('l-textServicios') || document.querySelector('.services-description');
-    if (elTextServicios && data['l-textServicios']) elTextServicios.innerHTML = data['l-textServicios'];
-
-    if (data['l-serviciosTable'] && Array.isArray(data['l-serviciosTable'])) {
-      serviciosGlobal = data['l-serviciosTable'];
-
-      renderizarGridLanding(serviciosGlobal);
-
-      if (typeof renderizarServiciosModal === 'function') {
-        renderizarServiciosModal(serviciosGlobal);
+    if (!data) {
+      const cachedData = localStorage.getItem(tenantKey);
+      if (cachedData) {
+        data = JSON.parse(cachedData);
+        aplicarDatosEnPantalla(data);
       }
+    } else {
+      localStorage.setItem(tenantKey, JSON.stringify(data));
+      aplicarDatosEnPantalla(data);
     }
 
-    const elTextCta = document.getElementById('l-textCta') || document.querySelector('#reservar h2');
-    if (elTextCta && data['l-textCta']) elTextCta.innerHTML = data['l-textCta'];
+    if (data && !window.__INITIAL_CONFIG__) {
+      aplicarDatosEnPantalla(data);
+    }
+
+    const dataFresca = await fetchLandingConfig();
+    if (dataFresca) {
+      localStorage.setItem(tenantKey, JSON.stringify(dataFresca));
+      aplicarDatosEnPantalla(dataFresca);
+    }
 
   } catch (error) {
     console.error('Error cargando los datos del tenant:', error);
   }
 }
+
+function aplicarDatosEnPantalla(data) {
+  if (!data) return;
+
+  if (data['l-barberiaNombre']) {
+    document.title = `${data['l-barberiaNombre']} | Turnos Online`;
+  }
+
+  const elH1 = document.getElementById('l-barberiaNombre');
+  if (elH1 && data['l-barberiaNombre']) {
+    elH1.innerHTML = `${data['l-barberiaNombre']} <span class="bar-logo" style="display:block; font-size: 0.5em;">Barbería</span>`;
+  }
+
+  const elLogo = document.getElementById('l-logoUrl') || document.querySelector('header .logo img');
+  if (elLogo && data['l-logoUrl']) {
+    elLogo.src = data['l-logoUrl'];
+    elLogo.alt = `${data['l-barberiaNombre'] || 'Barbería'} Logo`;
+  }
+
+  const elHeroTitle = document.getElementById('l-heroTitle') || document.querySelector('.hero-card h2');
+  if (elHeroTitle && data['l-heroTitle']) elHeroTitle.innerHTML = data['l-heroTitle'];
+
+  const elHeroSubtitle = document.getElementById('l-heroSubtitle') || document.querySelector('.hero-location');
+  if (elHeroSubtitle && data['l-heroSubtitle']) elHeroSubtitle.innerHTML = data['l-heroSubtitle'];
+
+  const elHeroText = document.getElementById('l-heroText') || document.querySelector('.rating p');
+  if (elHeroText && data['l-heroText']) elHeroText.textContent = data['l-heroText'];
+
+  const elVideo = document.getElementById('l-heroVideo') || document.querySelector('.hero-video video');
+  if (elVideo && data['l-heroVideo'] && elVideo.src !== data['l-heroVideo']) {
+    elVideo.src = data['l-heroVideo'];
+    elVideo.load();
+  }
+
+  const elHeroVideoText = document.getElementById('l-heroVideoText') || document.getElementById('about-img-p');
+  if (elHeroVideoText && data['l-heroVideoText']) elHeroVideoText.innerHTML = data['l-heroVideoText'];
+
+  const elSobreAbout = document.getElementById('l-sobretituloAbout') || document.querySelector('.about-content .section-label');
+  if (elSobreAbout && data['l-sobretituloAbout']) elSobreAbout.textContent = data['l-sobretituloAbout'];
+
+  const elTituloAbout = document.getElementById('l-tituloAbout') || document.querySelector('.about-content h2');
+  if (elTituloAbout && data['l-tituloAbout']) elTituloAbout.innerHTML = data['l-tituloAbout'];
+
+  const elTextAbout = document.getElementById('l-textAbout');
+  if (elTextAbout && data['l-textAbout']) elTextAbout.textContent = data['l-textAbout'];
+
+  const elTextAbout2 = document.getElementById('l-textAbout2');
+  if (elTextAbout2 && data['l-textAbout2']) elTextAbout2.textContent = data['l-textAbout2'];
+
+  const elSubtextAbout = document.getElementById('l-subtextAbout');
+  if (elSubtextAbout && data['l-subtextAbout']) elSubtextAbout.textContent = data['l-subtextAbout'];
+
+  const elAboutImg = document.getElementById('l-aboutImg');
+  if (elAboutImg && data['l-aboutImg']) {
+    elAboutImg.src = data['l-aboutImg'];
+  }
+
+  const elSobreServicios = document.getElementById('l-sobretituloServicios') || document.querySelector('#servicios .section-label');
+  if (elSobreServicios && data['l-sobretituloServicios']) elSobreServicios.textContent = data['l-sobretituloServicios'];
+
+  const elTituloServicios = document.getElementById('l-tituloServicios') || document.querySelector('#servicios h2');
+  if (elTituloServicios && data['l-tituloServicios']) elTituloServicios.innerHTML = data['l-tituloServicios'];
+
+  const elTextServicios = document.getElementById('l-textServicios') || document.querySelector('.services-description');
+  if (elTextServicios && data['l-textServicios']) elTextServicios.innerHTML = data['l-textServicios'];
+
+  if (data['l-serviciosTable'] && Array.isArray(data['l-serviciosTable'])) {
+    serviciosGlobal = data['l-serviciosTable'];
+
+    renderizarGridLanding(serviciosGlobal);
+
+    if (typeof renderizarServiciosModal === 'function') {
+      renderizarServiciosModal(serviciosGlobal);
+    }
+  }
+
+  const elTextCta = document.getElementById('l-textCta') || document.querySelector('#reservar h2');
+  if (elTextCta && data['l-textCta']) elTextCta.innerHTML = data['l-textCta'];
+}
+
+document.addEventListener("change", (e) => {
+  if (e.target.matches('input[name="service"]')) {
+    const idSeleccionado = Number(e.target.value);
+    const servicioEncontrado = serviciosGlobal.find(s => Number(s.id) === idSeleccionado);
+
+    if (servicioEncontrado) {
+      servicioSeleccionado = servicioEncontrado.id;
+      servicioNombre = servicioEncontrado.nombre;
+
+      const formatearPrecio = (valor) => {
+        return new Intl.NumberFormat('es-AR', {
+          style: 'currency',
+          currency: 'ARS',
+          maximumFractionDigits: 0
+        }).format(valor);
+      };
+
+      servicioPrecio = formatearPrecio(servicioEncontrado.precio || 0);
+    }
+  }
+});
 
 document.addEventListener("change", (e) => {
   if (e.target.matches('input[name="service"]')) {

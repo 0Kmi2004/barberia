@@ -8,8 +8,6 @@ if (-not (Test-Path $envFile)) {
   throw "No se encontró .env en la raíz del proyecto."
 }
 
-# Se cargan aquí por comodidad y para validarlas antes de iniciar los procesos.
-# El backend también las carga automáticamente mediante dotenv.
 Get-Content $envFile | ForEach-Object {
   if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)\s*$') {
     [Environment]::SetEnvironmentVariable($matches[1], $matches[2], 'Process')

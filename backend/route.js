@@ -2,11 +2,19 @@ const db = require('./config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+
 const { generarHorarios } = require('./utils/horarios');
 const { enviarConfirmacionTurno } = require('./utils/mailer');
 const { registrarCliente, removerCliente } = require('./utils/sseService');
 const { notificarAdmin } = require('./utils/sseService');
+
 const identificarTenant = require('./middleware/tenant');
+
+const fs = require('fs');
+const path = require('path');
+
+const NodeCache = require('node-cache');
+const configCache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -71,31 +79,89 @@ module.exports = requireAdmin;
 
 function registerRoutes(app) {
 
+  app.get('/demo', async (req, res) => {
+    try {
+      const tenantId = req.tenant?.id;
+
+      const [barberias] = await db.query('SELECT * FROM barberias WHERE id = ? LIMIT 1', [tenantId]);
+      const b = barberias[0] || {};
+
+      let servicios = [];
+      try {
+        const [rows] = await db.query('SELECT id, nombre, descripcion, precio, activo FROM servicios WHERE barberia_id = ? AND activo = TRUE', [tenantId]);
+        servicios = rows;
+      } catch (_e) {
+        servicios = [];
+      }
+
+      const config = {
+        id: b.id,
+        subdominio: b.subdominio,
+        nombre: b.nombre,
+        logo_url: b.logo_url,
+        color_primario: b.color_primario,
+        activa: b.activa,
+        'l-barberiaNombre': b.nombre,
+        'l-logoUrl': b.logo_url,
+        'l-heroTitle': b.hero_titulo,
+        'l-heroSubtitle': b.hero_subtitulo,
+        'l-heroText' : b.hero_texto_rating,
+        'l-heroVideoText': b.hero_video_texto,
+        'l-heroVideo': b.hero_video_url,
+        'l-sobretituloAbout': b.about_sobretitulo,
+        'l-tituloAbout': b.about_titulo,
+        'l-textAbout': b.about_texto_1,
+        'l-textAbout2': b.about_texto_2,
+        'l-subtextAbout': b.about_cita,
+        'l-aboutImg': b.about_imagen_url,
+        'l-sobretituloServicios': b.servicios_sobretitulo,
+        'l-tituloServicios': b.servicios_titulo,
+        'l-textServicios': b.servicios_texto,
+        'l-textCta': b.cta_titulo,
+        'l-serviciosTable': servicios,
+      };
+
+      const indexPath = path.join(__dirname, '../web/dist/index.html');
+      let htmlContent = fs.readFileSync(indexPath, 'utf8');
+
+      const initialScript = `<script>window.__INITIAL_CONFIG__ = ${JSON.stringify(config)};</script>`;
+      htmlContent = htmlContent.replace('</head>', `${initialScript}</head>`);
+
+      if (config.nombre) {
+        htmlContent = htmlContent.replace(
+          '<title>Tuerto Chávez Barbería | Cortes de Pelo y Barba</title>',
+          `<title>${config.nombre} | Turnos Online</title>`
+        );
+      }
+
+      return res.send(htmlContent);
+    } catch (error) {
+      return res.status(500).send('Error al cargar la página');
+    }
+  });
+
   app.get('/api/barberia/configuracion', async (req, res) => {
     try {
       if (!req.tenant?.id) {
         return res.status(400).json({ error: 'Tenant no especificado' });
       }
 
-      const [barberias] = await db.query(
-        'SELECT * FROM barberias WHERE id = ? LIMIT 1',
-        [req.tenant.id]
-      );
+      const cacheKey = `config_${req.tenant.id}`;
 
-      const b = barberias[0] || {};
-
-      let servicios = [];
-      try {
-        const [rows] = await db.query(
-          'SELECT id, nombre, descripcion, precio, activo FROM servicios WHERE barberia_id = ? AND activo = TRUE',
-          [req.tenant.id]
-        );
-        servicios = rows;
-      } catch (_e) {
-        servicios = [];
+      if (configCache.has(cacheKey)) {
+        return res.json(configCache.get(cacheKey));
       }
 
-      return res.json({
+      const [barberiasResult, serviciosResult] = await Promise.all([
+        db.query('SELECT * FROM barberias WHERE id = ? LIMIT 1', [req.tenant.id]),
+        db.query('SELECT id, nombre, descripcion, precio, activo FROM servicios WHERE barberia_id = ? AND activo = TRUE', [req.tenant.id])
+          .catch(() => [[]])
+      ]);
+
+      const b = barberiasResult[0][0] || {};
+      const servicios = serviciosResult[0] || [];
+
+      const responseData = {
         id: b.id,
         subdominio: b.subdominio,
         nombre: b.nombre,
@@ -125,8 +191,11 @@ function registerRoutes(app) {
 
         'l-textCta': b.cta_titulo,
         'l-serviciosTable': servicios,
+      };
 
-      });
+      configCache.set(cacheKey, responseData);
+
+      return res.json(responseData);
 
     } catch (error) {
       logEvent('error', 'FETCH_CONFIGURACION_ERROR', { error: error.message, tenantId: req.tenant?.id });
@@ -381,10 +450,12 @@ function registerRoutes(app) {
         servicioId: servicio
       });
 
-      notificarAdmin(req.tenant.id, 'ACTUALIZAR_GRILLA', {
-        reservaId: resReserva.insertId,
-        accion: 'NUEVA_RESERVA'
-      });
+      if (typeof notificarAdmin === 'function') {
+        notificarAdmin(req.tenant.id, 'ACTUALIZAR_GRILLA', {
+          reservaId: resReserva.insertId,
+          accion: 'NUEVA_RESERVA'
+        });
+      }
 
       res.status(201).json({
         ok: true,
@@ -393,19 +464,28 @@ function registerRoutes(app) {
       });
 
       if (cliente.email) {
-        const [rowsServicio] = await db.query('SELECT nombre FROM servicios WHERE id = ?', [servicio]);
-        const nombreServicio = rowsServicio[0]?.nombre || 'Servicio';
+        (async () => {
+          try {
+            const [rowsServicio] = await db.query('SELECT nombre FROM servicios WHERE id = ?', [servicio]);
+            const nombreServicio = rowsServicio[0]?.nombre || 'Servicio de Barbería';
 
-        enviarConfirmacionTurno({
-          emailCliente: cliente.email,
-          nombreCliente: cliente.nombre || 'Cliente',
-          fecha,
-          hora,
-          servicio: nombreServicio,
-          barbero: 'Asignado en el local',
-          tokenCancelacion,
-          subdominio: req.tenant?.subdominio
-        });
+            await enviarConfirmacionTurno({
+              emailCliente: cliente.email,
+              nombreCliente: cliente.nombre || 'Cliente',
+              fecha,
+              hora,
+              servicio: nombreServicio,
+              barbero: 'Asignado en el local',
+              tokenCancelacion,
+              subdominio: req.tenant?.subdominio
+            });
+          } catch (emailError) {
+            logEvent('error', 'SEND_CONFIRMATION_EMAIL_ERROR', {
+              error: emailError.message,
+              reservaId: resReserva.insertId
+            });
+          }
+        })();
       }
 
     } catch (error) {
@@ -808,8 +888,6 @@ function registerRoutes(app) {
       return res.status(500).json({ message: 'Error al obtener los barberos.' });
     }
   });
-
-
 
 }
 
